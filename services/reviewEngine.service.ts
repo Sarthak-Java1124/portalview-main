@@ -95,7 +95,7 @@ export async function queryConsensus(
   jobId: string
 ): Promise<ConsensusState | null> {
   try {
-    const { result, output } = await contract.query["get_consensus"](
+    const { result, output } = await contract.query["getConsensus"](
       caller,
       { gasLimit: buildGasLimit(api), storageDepositLimit: null },
       jobId
@@ -106,7 +106,9 @@ export async function queryConsensus(
     const value = extractOkValue(output);
     return parseConsensusState(value);
   } catch (cause) {
-    throw new ReviewEngineError("Failed to query consensus", cause);
+    const msg = cause instanceof Error ? cause.message : String(cause);
+    console.error("[reviewEngine] queryConsensus failed:", cause);
+    throw new ReviewEngineError(`Failed to query consensus: ${msg}`, cause);
   }
 }
 
@@ -118,7 +120,7 @@ export async function queryJobs(
   limit: number
 ): Promise<ReviewJob[]> {
   try {
-    const { result, output } = await contract.query["get_jobs"](
+    const { result, output } = await contract.query["getJobs"](
       caller,
       { gasLimit: buildGasLimit(api), storageDepositLimit: null },
       offset,
@@ -133,7 +135,9 @@ export async function queryJobs(
       .map(parseReviewJob)
       .filter((j): j is ReviewJob => j !== null);
   } catch (cause) {
-    throw new ReviewEngineError("Failed to query review jobs", cause);
+    const msg = cause instanceof Error ? cause.message : String(cause);
+    console.error("[reviewEngine] queryJobs failed:", cause);
+    throw new ReviewEngineError(`Failed to query review jobs: ${msg}`, cause);
   }
 }
 
@@ -144,7 +148,7 @@ export async function queryFindings(
   jobId: string
 ): Promise<Finding[]> {
   try {
-    const { result, output } = await contract.query["get_findings"](
+    const { result, output } = await contract.query["getFindings"](
       caller,
       { gasLimit: buildGasLimit(api), storageDepositLimit: null },
       jobId
@@ -158,7 +162,9 @@ export async function queryFindings(
       .map(parseFinding)
       .filter((f): f is Finding => f !== null);
   } catch (cause) {
-    throw new ReviewEngineError("Failed to query findings", cause);
+    const msg = cause instanceof Error ? cause.message : String(cause);
+    console.error("[reviewEngine] queryFindings failed:", cause);
+    throw new ReviewEngineError(`Failed to query findings: ${msg}`, cause);
   }
 }
 
@@ -171,7 +177,7 @@ export function buildSubmitFindingTx(
   title: string,
   description: string
 ): SubmittableExtrinsic<"promise"> {
-  return contract.tx["submit_finding"](
+  return contract.tx["submitFinding"](
     {
       gasLimit: buildGasLimit(api),
       storageDepositLimit: null,
@@ -190,7 +196,7 @@ export function buildClaimRewardTx(
   contract: ContractPromise,
   jobId: string
 ): SubmittableExtrinsic<"promise"> {
-  return contract.tx["claim_reward"](
+  return contract.tx["claimReward"](
     { gasLimit: buildGasLimit(api), storageDepositLimit: null },
     jobId
   );
@@ -203,7 +209,7 @@ export function buildSlashReviewerTx(
   jobId: string,
   reviewer: string
 ): SubmittableExtrinsic<"promise"> {
-  return contract.tx["slash_reviewer"](
+  return contract.tx["slashReviewer"](
     { gasLimit: buildGasLimit(api), storageDepositLimit: null },
     jobId,
     reviewer
@@ -219,7 +225,7 @@ export function buildRegisterJobTx(
   contractHash: string,
   stakeAmount: bigint
 ): SubmittableExtrinsic<"promise"> {
-  return contract.tx["register_job"](
+  return contract.tx["registerJob"](
     {
       gasLimit: buildGasLimit(api),
       storageDepositLimit: null,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { StakeInput } from "@/components/staking/StakeInput";
@@ -107,8 +107,10 @@ export default function SubmitPage() {
   const [step, setStep] = useState(1);
 
   // step 1 state
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [fileUploaded, setFileUploaded] = useState(false);
+  const [fileInfo, setFileInfo] = useState<{ name: string; sizeKb: string; lines: string } | null>(null);
   const [hashInput, setHashInput] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const githubInfo = parseGitHubUrl(githubUrl);
@@ -143,6 +145,22 @@ export default function SubmitPage() {
     return () => clearTimeout(timer);
   }, [githubUrl, githubInfo]);
 
+  const handleFile = async (file: File) => {
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    const hash = "0x" + Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0")).join("");
+    const text = new TextDecoder().decode(buf);
+    const lines = text.split("\n").length;
+    setFileInfo({
+      name: file.name,
+      sizeKb: (file.size / 1024).toFixed(1),
+      lines: lines.toLocaleString(),
+    });
+    setContractHash(hash);
+    setFileUploaded(true);
+  };
+
   const canProceedStep1 = fileUploaded || !!hashInput.trim() || (!!githubInfo && !isComputingHash && !!contractHash);
 
   const handleSubmit = async () => {
@@ -167,6 +185,7 @@ export default function SubmitPage() {
     reset();
     setStep(1);
     setFileUploaded(false);
+    setFileInfo(null);
     setHashInput("");
     setGithubUrl("");
     setContractHash(null);
@@ -215,13 +234,20 @@ export default function SubmitPage() {
                 </p>
               </div>
 
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".contract,.json,.wasm"
+                style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+              />
               {!fileUploaded ? (
                 <div
                   className={`dropzone ${dragging ? "dropzone-dragging" : ""}`}
                   onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                   onDragLeave={() => setDragging(false)}
-                  onDrop={(e) => { e.preventDefault(); setDragging(false); setFileUploaded(true); }}
-                  onClick={() => setFileUploaded(true)}
+                  onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   <div style={{
                     width: 52, height: 52, margin: "0 auto 14px",
@@ -240,15 +266,23 @@ export default function SubmitPage() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".95rem", fontWeight: 600 }}>lending_pool.contract</span>
-                      <span style={{ fontSize: ".72rem", color: "var(--ink-4)" }}>18.4 KB · 287 lines</span>
+                      <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".95rem", fontWeight: 600 }}>
+                        {fileInfo?.name ?? "file.contract"}
+                      </span>
+                      {fileInfo && (
+                        <span style={{ fontSize: ".72rem", color: "var(--ink-4)" }}>
+                          {fileInfo.sizeKb} KB · {fileInfo.lines} lines
+                        </span>
+                      )}
                     </div>
-                    <div style={{ fontSize: ".72rem", color: "var(--ink-4)", marginTop: 4, display: "flex", gap: 12 }}>
-                      <span><span style={{ fontFamily: "var(--font-mono,monospace)", color: "var(--ink-5)" }}>hash:</span> <span style={{ fontFamily: "var(--font-mono,monospace)", color: "var(--ink)" }}>0x9c2f4b1e…f72a</span></span>
-                      <span><span style={{ fontFamily: "var(--font-mono,monospace)", color: "var(--ink-5)" }}>type:</span> ink! v5.0 · PSP-22</span>
-                    </div>
+                    {contractHash && (
+                      <div style={{ fontSize: ".72rem", color: "var(--ink-4)", marginTop: 4, fontFamily: "var(--font-mono,monospace)" }}>
+                        <span style={{ color: "var(--ink-5)" }}>sha256: </span>
+                        <span style={{ color: "var(--ink)" }}>{contractHash.slice(0, 20)}…</span>
+                      </div>
+                    )}
                   </div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setFileUploaded(false)}>Replace</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setFileUploaded(false); setFileInfo(null); setContractHash(null); }}>Replace</button>
                 </div>
               )}
 
@@ -428,7 +462,7 @@ export default function SubmitPage() {
               <div className="glass-card" style={{ padding: "1.125rem 1.25rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { k: "Contract", v: fileUploaded ? "lending_pool.contract" : (githubInfo ? `${githubInfo.owner}/${githubInfo.repo}` : hashInput), mono: true },
+                    { k: "Contract", v: fileUploaded ? (fileInfo?.name ?? "file.contract") : (githubInfo ? `${githubInfo.owner}/${githubInfo.repo}` : hashInput), mono: true },
                     { k: "Hash",     v: contractHash ? contractHash.slice(0, 22) + "…" : hashInput || "—", mono: true },
                     { k: "Window",   v: window_ < 24 ? `${window_} hours` : `${window_ / 24} day${window_ > 24 ? "s" : ""}` },
                     { k: "Quorum",   v: quorum.replace("of", " of ") + ` · ${tier} tier or above` },

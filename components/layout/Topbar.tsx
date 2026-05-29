@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WalletButton } from "@/components/wallet/WalletButton";
+import { useAuth } from "@/context/AuthContext";
 import { APP_NAME } from "@/lib/constants";
 
 const PAGE_META: Record<string, { title: string; subtitle?: string; breadcrumb?: string[] }> = {
@@ -13,6 +15,9 @@ const PAGE_META: Record<string, { title: string; subtitle?: string; breadcrumb?:
 
 export function Topbar() {
   const pathname = usePathname();
+  const { user, profile } = useAuth();
+
+  const initials = profile?.username?.slice(0, 2).toUpperCase() ?? user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   const baseRoute = "/" + (pathname.split("/")[1] ?? "");
   const meta = PAGE_META[baseRoute] ?? { title: APP_NAME };
@@ -60,26 +65,50 @@ export function Topbar() {
 
       {/* Right: actions */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* Search icon */}
-        <button className="btn btn-ghost btn-icon" aria-label="Search">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/>
-          </svg>
-        </button>
-
-        {/* Bell icon with unread dot */}
-        <button className="btn btn-ghost btn-icon" aria-label="Notifications" style={{ position: "relative" }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9Z"/>
-            <path d="M10 21a2 2 0 0 0 4 0"/>
-          </svg>
-          <span style={{
-            position: "absolute", top: 5, right: 5, width: 6, height: 6,
-            background: "var(--accent)", border: "1px solid var(--ink)",
-          }} />
-        </button>
-
         <WalletButton />
+
+        {user ? (
+          <Link href="/profile" style={{ textDecoration: "none" }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "0.35rem 0.625rem",
+              border: "1px solid var(--ink)",
+              background: "var(--accent)",
+              cursor: "pointer",
+            }}>
+              <span style={{
+                width: 22, height: 22, display: "grid", placeItems: "center",
+                background: "var(--ink)", color: "white",
+                fontFamily: "var(--font-mono,monospace)", fontSize: ".58rem", fontWeight: 700,
+                flexShrink: 0,
+              }}>
+                {initials}
+              </span>
+              <span style={{ fontSize: ".75rem", fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>
+                {profile?.username ?? user.email?.split("@")[0]}
+              </span>
+              {profile?.intent && (
+                <span style={{
+                  fontSize: ".6rem", fontWeight: 600, letterSpacing: ".05em",
+                  textTransform: "uppercase", color: "var(--ink-3)",
+                }}>
+                  · {profile.intent}
+                </span>
+              )}
+            </div>
+          </Link>
+        ) : (
+          <Link href="/auth" style={{ textDecoration: "none" }}>
+            <button className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              Sign In
+            </button>
+          </Link>
+        )}
       </div>
     </header>
   );

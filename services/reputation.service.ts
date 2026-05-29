@@ -36,7 +36,7 @@ export async function queryScore(
   address: string
 ): Promise<ReputationScore | null> {
   try {
-    const { result, output } = await contract.query["get_score"](
+    const { result, output } = await contract.query["getScore"](
       caller,
       { gasLimit: buildGasLimit(api), storageDepositLimit: null },
       address
@@ -47,7 +47,9 @@ export async function queryScore(
     const value = extractOkValue(output);
     return parseReputationScore(value);
   } catch (cause) {
-    throw new ReputationError("Failed to query reputation score", cause);
+    const msg = cause instanceof Error ? cause.message : String(cause);
+    console.error("[reputation] queryScore failed:", cause);
+    throw new ReputationError(`Failed to query reputation score: ${msg}`, cause);
   }
 }
 
@@ -59,7 +61,7 @@ export async function queryLeaderboard(
   limit: number
 ): Promise<ReputationScore[]> {
   try {
-    const { result, output } = await contract.query["get_leaderboard"](
+    const { result, output } = await contract.query["getLeaderboard"](
       caller,
       { gasLimit: buildGasLimit(api), storageDepositLimit: null },
       offset,
@@ -74,7 +76,9 @@ export async function queryLeaderboard(
       .map(parseReputationScore)
       .filter((s): s is ReputationScore => s !== null);
   } catch (cause) {
-    throw new ReputationError("Failed to query leaderboard", cause);
+    const msg = cause instanceof Error ? cause.message : String(cause);
+    console.error("[reputation] queryLeaderboard failed:", cause);
+    throw new ReputationError(`Failed to query leaderboard: ${msg}`, cause);
   }
 }
 

@@ -1,16 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  getConsensus,
-  getFindings,
-  addFinding,
-  delay,
-  mockTxHash,
-} from "@/lib/mock-data";
+import { useApi } from "./useApi";
 import { useWallet } from "./useWallet";
+import { getConsensus, getFindings, addFinding, delay, mockTxHash } from "@/lib/mock-data";
+import { loadAbiJson, createContract } from "@/services/contract.service";
+import { queryConsensus, queryFindings, buildSubmitFindingTx } from "@/services/reviewEngine.service";
+import { IS_LIVE_MODE, CONFIG, ZERO_CALLER } from "@/lib/constants";
 import type { ConsensusState, Finding, FindingSeverity } from "@/types/review.types";
 import type { TxStatus } from "@/types/staking.types";
+import type { Signer, SubmittableExtrinsic } from "@polkadot/api/types";
 
 interface UseReviewEngineResult {
   consensus: ConsensusState | null;
@@ -32,7 +31,8 @@ interface UseReviewEngineResult {
 }
 
 export function useReviewEngine(jobId?: string): UseReviewEngineResult {
-  const { selectedAccount } = useWallet();
+  const { api } = useApi();
+  const { selectedAccount, signer } = useWallet();
   const [consensus, setConsensus] = useState<ConsensusState | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,25 +48,96 @@ export function useReviewEngine(jobId?: string): UseReviewEngineResult {
   }, []);
 
   const refetchConsensus = useCallback(async (id: string) => {
+    if (IS_LIVE_MODE && api) {
+      try {
+        const caller = selectedAccount?.address ?? ZERO_CALLER;
+        const abi = await loadAbiJson("review_engine");
+        const contract = createContract(api, abi, CONFIG.reviewEngineAddress);
+        const data = await queryConsensus(api, contract, caller, id);
+        if (!isMounted.current) return;
+        setConsensus(data);
+      } catch {
+        // leave state unchanged on error
+      }
+      return;
+    }
+
     await delay(200);
     if (!isMounted.current) return;
     setConsensus(getConsensus(id));
-  }, []);
+  }, [api, selectedAccount]);
 
   const refetchFindings = useCallback(async (id: string) => {
     setIsLoading(true);
     setError(null);
+
+    if (IS_LIVE_MODE && api) {
+      try {
+        const caller = selectedAccount?.address ?? ZERO_CALLER;
+        const abi = await loadAbiJson("review_engine");
+        const contract = createContract(api, abi, CONFIG.reviewEngineAddress);
+        const data = await queryFindings(api, contract, caller, id);
+        if (!isMounted.current) return;
+        setFindings(data);
+      } catch (err) {
+        if (!isMounted.current) return;
+        setError(err instanceof Error ? err.message : "Failed to load findings");
+      } finally {
+        if (isMounted.current) setIsLoading(false);
+      }
+      return;
+    }
+
     await delay(300);
     if (!isMounted.current) return;
     setFindings(getFindings(id));
     setIsLoading(false);
-  }, []);
+  }, [api, selectedAccount]);
 
   useEffect(() => {
     if (!jobId) return;
     refetchConsensus(jobId);
     refetchFindings(jobId);
   }, [jobId, refetchConsensus, refetchFindings]);
+
+  const _execLiveTx = useCallback(
+    async (buildTxFn: () => SubmittableExtrinsic<"promise">): Promise<string> => {
+      if (!api || !signer || !selectedAccount) throw new Error("Not connected");
+      const _signer = signer as Signer;
+      const _address = selectedAccount.address;
+
+      setTxStatus("pending");
+      setTxError(null);
+      setTxHash(null);
+
+      const tx = buildTxFn();
+      return new Promise((resolve, reject) => {
+        tx.signAndSend(_address, { signer: _signer }, (result) => {
+          const { status: s, dispatchError, isError } = result;
+          if (s.isBroadcast) setTxStatus("broadcast");
+          else if (s.isInBlock) setTxStatus("inBlock");
+          else if (s.isFinalized) {
+            const h = result.txHash.toHex();
+            setTxHash(h);
+            setTxStatus("finalized");
+            resolve(h);
+          }
+          if (isError || dispatchError) {
+            const msg = dispatchError?.toString() ?? "Transaction failed";
+            setTxStatus("error");
+            setTxError(msg);
+            reject(new Error(msg));
+          }
+        }).catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : "Transaction error";
+          setTxStatus("error");
+          setTxError(msg);
+          reject(err instanceof Error ? err : new Error(msg));
+        });
+      });
+    },
+    [api, signer, selectedAccount]
+  );
 
   const submitFinding = useCallback(
     async (
@@ -77,14 +148,25 @@ export function useReviewEngine(jobId?: string): UseReviewEngineResult {
     ): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
+      if (IS_LIVE_MODE && api && signer) {
+        const abi = await loadAbiJson("review_engine");
+        const contract = createContract(api, abi, CONFIG.reviewEngineAddress);
+        const hash = await _execLiveTx(() =>
+          buildSubmitFindingTx(api, contract, id, severity, title, description)
+        );
+        if (isMounted.current) {
+          await refetchConsensus(id);
+          await refetchFindings(id);
+        }
+        return hash;
+      }
+
       setTxStatus("pending");
       setTxError(null);
       setTxHash(null);
-
       await delay(200);
       setTxStatus("broadcast");
       await delay(600);
-
       const hash = mockTxHash();
       setTxHash(hash);
       setTxStatus("inBlock");
@@ -100,17 +182,14 @@ export function useReviewEngine(jobId?: string): UseReviewEngineResult {
         description,
         submittedAtBlock: 1_247_830 + Math.floor(Math.random() * 10),
       };
-
       addFinding(finding);
-
       if (isMounted.current) {
         setFindings(getFindings(id));
         setConsensus(getConsensus(id));
       }
-
       return hash;
     },
-    [selectedAccount]
+    [api, signer, selectedAccount, refetchConsensus, refetchFindings, _execLiveTx]
   );
 
   const resetTx = useCallback(() => {

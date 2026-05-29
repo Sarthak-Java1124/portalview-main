@@ -6,9 +6,70 @@ import { useReviewQueue } from "@/hooks/useReviewQueue";
 import { useWallet } from "@/hooks/useWallet";
 import { useReputation } from "@/hooks/useReputation";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { getTotalStats } from "@/lib/mock-data";
 import { formatBalance } from "@/lib/format";
 import Link from "next/link";
+
+function WelcomeCard({ onSubmit, onReview }: { onSubmit: () => void; onReview: () => void }) {
+  return (
+    <div style={{
+      border: "1px solid var(--ink)", background: "var(--accent)",
+      boxShadow: "4px 4px 0 var(--ink)", padding: "1.5rem",
+      display: "flex", flexDirection: "column", gap: 16,
+    }}>
+      <div>
+        <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--ink)", marginBottom: 4 }}>
+          Welcome to PortalReview
+        </div>
+        <p style={{ margin: 0, fontSize: ".85rem", color: "var(--ink-2)", lineHeight: 1.6 }}>
+          This is a decentralized peer review platform for ink! smart contracts.
+          What would you like to do?
+        </p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <Link href="/submit" style={{ textDecoration: "none" }} onClick={onSubmit}>
+          <div style={{
+            border: "1px solid var(--ink)", background: "var(--background)",
+            padding: "1rem", cursor: "pointer",
+            transition: "box-shadow 0.1s",
+          }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "2px 2px 0 var(--ink)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>
+              </svg>
+              <span style={{ fontWeight: 600, fontSize: ".88rem" }}>Submit a Contract</span>
+            </div>
+            <p style={{ margin: 0, fontSize: ".78rem", color: "var(--ink-3)", lineHeight: 1.5 }}>
+              Upload your ink! contract, set a POT bounty, and get security findings from auditors.
+            </p>
+          </div>
+        </Link>
+        <Link href="/review" style={{ textDecoration: "none" }} onClick={onReview}>
+          <div style={{
+            border: "1px solid var(--ink)", background: "var(--ink)", color: "white",
+            padding: "1rem", cursor: "pointer",
+            transition: "opacity 0.1s",
+          }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/><line x1="14" y1="4" x2="10" y2="20"/>
+              </svg>
+              <span style={{ fontWeight: 600, fontSize: ".88rem" }}>Review &amp; Earn POT</span>
+            </div>
+            <p style={{ margin: 0, fontSize: ".78rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>
+              Browse open review jobs, stake reputation, submit security findings, earn rewards.
+            </p>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 function StatTile({
   label, value, suffix, hint, dotColor, trend, tier,
@@ -50,17 +111,30 @@ function StatTile({
 
 export default function DashboardPage() {
   const { jobs, isLoading, hasMore, error, loadMore, refresh } = useReviewQueue();
-  const { selectedAccount } = useWallet();
+  const { isConnected, selectedAccount } = useWallet();
   const { score } = useReputation(selectedAccount?.address ?? undefined);
   const { entries } = useLeaderboard();
-  const stats = getTotalStats();
 
-  const openJobs = jobs.filter((j) => j.status === "Open" || j.status === "InReview").length;
+  const isNewUser = isConnected && !score?.reviewsCompleted && !score?.slashCount && (!score || score.score === 0n);
+
+  const openJobs    = jobs.filter((j) => j.status === "Open" || j.status === "InReview").length;
   const totalBounty = jobs.reduce((s, j) => s + j.stakeAmount / 1_000_000_000_000n, 0n);
+  const stats = {
+    jobCount:   jobs.length,
+    activeJobs: openJobs,
+    potStaked:  jobs
+      .filter((j) => j.status !== "Cancelled")
+      .reduce((s, j) => s + j.stakeAmount, 0n),
+  };
 
   return (
     <AppShell>
       <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 1400, margin: "0 auto" }}>
+
+        {/* ── Welcome card (new users only) ── */}
+        {isNewUser && (
+          <WelcomeCard onSubmit={() => {}} onReview={() => {}} />
+        )}
 
         {/* ── Stat tiles ── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
@@ -69,7 +143,6 @@ export default function DashboardPage() {
             value={String(openJobs)}
             suffix="awaiting review"
             dotColor="#38bdf8"
-            trend={12}
           />
           <StatTile
             label="Total Bounty Pool"

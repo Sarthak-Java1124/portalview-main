@@ -33,9 +33,15 @@ export function createContract(
 }
 
 export function buildGasLimit(api: ApiPromise): WeightV2 {
+  // Use half the max block weight so dry-run queries always have enough gas
+  const blockWeights = api.consts.system?.blockWeights as
+    | { maxBlock?: { refTime?: { toBigInt?(): bigint }; proofSize?: { toBigInt?(): bigint } } }
+    | undefined;
+  const refTime   = blockWeights?.maxBlock?.refTime?.toBigInt?.()   ?? 500_000_000_000n;
+  const proofSize = blockWeights?.maxBlock?.proofSize?.toBigInt?.() ?? 5_242_880n;
   return api.registry.createType("WeightV2", {
-    refTime: 30_000_000_000,
-    proofSize: 1_048_576,
+    refTime:   refTime   / 2n,
+    proofSize: proofSize / 2n,
   }) as unknown as WeightV2;
 }
 

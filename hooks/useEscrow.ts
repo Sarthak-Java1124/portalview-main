@@ -1,17 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  getEscrow,
-  addJob,
-  updateEscrowStatus,
-  delay,
-  mockTxHash,
-} from "@/lib/mock-data";
+import { useApi } from "./useApi";
 import { useWallet } from "./useWallet";
+import { getEscrow, addJob, updateEscrowStatus, delay, mockTxHash } from "@/lib/mock-data";
+import { loadAbiJson, createContract } from "@/services/contract.service";
+import { queryEscrowState, buildStakeTx, buildReleaseTx, buildCancelTx } from "@/services/escrow.service";
+import { IS_LIVE_MODE, CONFIG, REVIEW_WINDOW_BLOCKS, CONSENSUS_THRESHOLD } from "@/lib/constants";
 import type { EscrowState, TxStatus } from "@/types/staking.types";
 import type { ReviewJob, ConsensusState } from "@/types/review.types";
-import { REVIEW_WINDOW_BLOCKS, CONSENSUS_THRESHOLD } from "@/lib/constants";
+import type { Signer, SubmittableExtrinsic } from "@polkadot/api/types";
 
 interface UseEscrowResult {
   status: TxStatus;
@@ -36,7 +34,8 @@ interface UseEscrowResult {
 const OPENED_AT_BLOCK = 1_247_830;
 
 export function useEscrow(): UseEscrowResult {
-  const { selectedAccount } = useWallet();
+  const { api } = useApi();
+  const { selectedAccount, signer } = useWallet();
   const [escrowState, setEscrowState] = useState<EscrowState | null>(null);
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [status, setStatus] = useState<TxStatus>("idle");
@@ -52,13 +51,72 @@ export function useEscrow(): UseEscrowResult {
 
   const refetchState = useCallback(async (jobId: string) => {
     setIsLoadingState(true);
+
+    if (IS_LIVE_MODE && api && selectedAccount) {
+      try {
+        const abi = await loadAbiJson("escrow");
+        const contract = createContract(api, abi, CONFIG.escrowAddress);
+        const state = await queryEscrowState(api, contract, selectedAccount.address, jobId);
+        if (!isMounted.current) return;
+        setEscrowState(state);
+      } catch {
+        // leave state unchanged on error
+      } finally {
+        if (isMounted.current) setIsLoadingState(false);
+      }
+      return;
+    }
+
     await delay(250);
     if (!isMounted.current) return;
     setEscrowState(getEscrow(jobId));
     setIsLoadingState(false);
-  }, []);
+  }, [api, selectedAccount]);
 
-  const simulateTx = useCallback(async (): Promise<string> => {
+  const _execLiveTx = useCallback(
+    async (buildTxFn: () => SubmittableExtrinsic<"promise">): Promise<string> => {
+      if (!api || !signer || !selectedAccount) throw new Error("Not connected");
+      const _signer = signer as Signer;
+      const _address = selectedAccount.address;
+
+      setStatus("pending");
+      setError(null);
+      setTxHash(null);
+      setBlockHash(null);
+
+      const tx = buildTxFn();
+      return new Promise((resolve, reject) => {
+        tx.signAndSend(_address, { signer: _signer }, (result) => {
+          const { status: s, dispatchError, isError } = result;
+          if (s.isBroadcast) setStatus("broadcast");
+          else if (s.isInBlock) {
+            setStatus("inBlock");
+            setTxHash(result.txHash.toHex());
+            setBlockHash(s.asInBlock.toHex());
+          } else if (s.isFinalized) {
+            const h = result.txHash.toHex();
+            setStatus("finalized");
+            setBlockHash(s.asFinalized.toHex());
+            resolve(h);
+          }
+          if (isError || dispatchError) {
+            const msg = dispatchError?.toString() ?? "Transaction failed";
+            setStatus("error");
+            setError(msg);
+            reject(new Error(msg));
+          }
+        }).catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : "Transaction error";
+          setStatus("error");
+          setError(msg);
+          reject(err instanceof Error ? err : new Error(msg));
+        });
+      });
+    },
+    [api, signer, selectedAccount]
+  );
+
+  const _simulateTx = useCallback(async (): Promise<string> => {
     setStatus("pending");
     setError(null);
     setTxHash(null);
@@ -86,8 +144,15 @@ export function useEscrow(): UseEscrowResult {
     ): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      const hash = await simulateTx();
+      if (IS_LIVE_MODE && api && signer) {
+        const abi = await loadAbiJson("escrow");
+        const contract = createContract(api, abi, CONFIG.escrowAddress);
+        const hash = await _execLiveTx(() => buildStakeTx(api, contract, jobId, description, amount));
+        if (isMounted.current) await refetchState(jobId);
+        return hash;
+      }
 
+      const hash = await _simulateTx();
       const newJob: ReviewJob = {
         id: jobId,
         submitter: selectedAccount.address,
@@ -101,7 +166,6 @@ export function useEscrow(): UseEscrowResult {
         closesAtBlock: OPENED_AT_BLOCK + REVIEW_WINDOW_BLOCKS,
         findingCount: 0,
       };
-
       const newEscrow: EscrowState = {
         jobId,
         submitter: selectedAccount.address,
@@ -109,7 +173,6 @@ export function useEscrow(): UseEscrowResult {
         status: "Staked",
         openedAtBlock: OPENED_AT_BLOCK,
       };
-
       const newConsensus: ConsensusState = {
         jobId,
         totalFindings: 0,
@@ -118,35 +181,51 @@ export function useEscrow(): UseEscrowResult {
         reached: false,
         votingEnds: OPENED_AT_BLOCK + REVIEW_WINDOW_BLOCKS,
       };
-
       addJob(newJob, newEscrow, newConsensus);
-
       if (isMounted.current) setEscrowState(newEscrow);
       return hash;
     },
-    [selectedAccount, simulateTx]
+    [api, signer, selectedAccount, refetchState, _execLiveTx, _simulateTx]
   );
 
   const release = useCallback(
     async (jobId: string): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
-      const hash = await simulateTx();
+
+      if (IS_LIVE_MODE && api && signer) {
+        const abi = await loadAbiJson("escrow");
+        const contract = createContract(api, abi, CONFIG.escrowAddress);
+        const hash = await _execLiveTx(() => buildReleaseTx(api, contract, jobId));
+        if (isMounted.current) await refetchState(jobId);
+        return hash;
+      }
+
+      const hash = await _simulateTx();
       updateEscrowStatus(jobId, "Released");
       if (isMounted.current) setEscrowState(getEscrow(jobId));
       return hash;
     },
-    [selectedAccount, simulateTx]
+    [api, signer, selectedAccount, refetchState, _execLiveTx, _simulateTx]
   );
 
   const cancel = useCallback(
     async (jobId: string): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
-      const hash = await simulateTx();
+
+      if (IS_LIVE_MODE && api && signer) {
+        const abi = await loadAbiJson("escrow");
+        const contract = createContract(api, abi, CONFIG.escrowAddress);
+        const hash = await _execLiveTx(() => buildCancelTx(api, contract, jobId));
+        if (isMounted.current) await refetchState(jobId);
+        return hash;
+      }
+
+      const hash = await _simulateTx();
       updateEscrowStatus(jobId, "Cancelled");
       if (isMounted.current) setEscrowState(getEscrow(jobId));
       return hash;
     },
-    [selectedAccount, simulateTx]
+    [api, signer, selectedAccount, refetchState, _execLiveTx, _simulateTx]
   );
 
   const reset = useCallback(() => {
@@ -156,17 +235,5 @@ export function useEscrow(): UseEscrowResult {
     setError(null);
   }, []);
 
-  return {
-    status,
-    txHash,
-    blockHash,
-    error,
-    escrowState,
-    isLoadingState,
-    stake,
-    release,
-    cancel,
-    refetchState,
-    reset,
-  };
+  return { status, txHash, blockHash, error, escrowState, isLoadingState, stake, release, cancel, refetchState, reset };
 }

@@ -34,6 +34,75 @@ export default function ReviewPage() {
     <AppShell>
       <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
+        {/* ── Reviewer explainer ── */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0,
+          border: "1px solid var(--line)", background: "var(--bg-elevated)",
+        }}>
+          {[
+            {
+              step: "01", title: "Browse jobs",
+              text: "Open jobs show the bounty, description, and required reviewer tier.",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+              ),
+            },
+            {
+              step: "02", title: "Open a job",
+              text: "Click into a job you can review. Your reputation must meet the minimum tier.",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/>
+                </svg>
+              ),
+            },
+            {
+              step: "03", title: "File findings",
+              text: "Stake your reviewer bond and submit a finding with severity, title, and description.",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              ),
+            },
+            {
+              step: "04", title: "Earn rewards",
+              text: "2-of-3 confirmation by Senior+ reviewers validates the finding. You earn POT + reputation.",
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 4h10v4a5 5 0 1 1-10 0V4Z"/>
+                </svg>
+              ),
+            },
+          ].map((item, i) => (
+            <div
+              key={item.step}
+              style={{
+                padding: "0.875rem 1rem",
+                borderLeft: i > 0 ? "1px solid var(--line)" : "none",
+                display: "flex", flexDirection: "column", gap: 6,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{
+                  width: 20, height: 20, display: "grid", placeItems: "center",
+                  background: "var(--accent)", border: "1px solid var(--ink)", flexShrink: 0,
+                  color: "var(--ink)",
+                }}>
+                  {item.icon}
+                </span>
+                <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".6rem", fontWeight: 700, color: "var(--ink-4)", letterSpacing: ".06em" }}>
+                  STEP {item.step}
+                </span>
+              </div>
+              <div style={{ fontSize: ".8rem", fontWeight: 600, color: "var(--ink)" }}>{item.title}</div>
+              <div style={{ fontSize: ".74rem", color: "var(--ink-4)", lineHeight: 1.55 }}>{item.text}</div>
+            </div>
+          ))}
+        </div>
+
         {/* Top control bar */}
         <div className="glass-card" style={{ padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div>

@@ -134,13 +134,12 @@ export default function LeaderboardPage() {
 
         {/* ── Header ── */}
         <div style={{ textAlign: "center", paddingTop: 8 }}>
-          <span className="label-cap">{"// SEASON 5"}</span>
-          <h1 style={{ margin: "12px 0 6px", fontSize: "2rem", fontWeight: 700, letterSpacing: "-.025em", color: "var(--ink)" }}>
+          <h1 style={{ margin: "0 0 6px", fontSize: "2rem", fontWeight: 700, letterSpacing: "-.025em", color: "var(--ink)" }}>
             Reputation leaderboard
           </h1>
           <p style={{ margin: 0, fontSize: ".88rem", color: "var(--ink-3)" }}>
-            Top reviewers on Portaldot · season ends in{" "}
-            <span style={{ fontFamily: "var(--font-mono,monospace)", fontWeight: 600, color: "var(--ink)" }}>12 days 4h</span>
+            Top reviewers on Portaldot ·{" "}
+            <span style={{ fontFamily: "var(--font-mono,monospace)", color: "var(--ink-4)" }}>{entries.length} ranked</span>
           </p>
         </div>
 
@@ -185,7 +184,7 @@ export default function LeaderboardPage() {
             {/* header row */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "60px 1.4fr 1fr 0.9fr 0.7fr 1fr 0.7fr 0.8fr",
+              gridTemplateColumns: "60px 1.4fr 1fr 0.9fr 0.7fr 1fr 0.7fr",
               padding: "0.75rem 1.25rem",
               background: "var(--ink)",
               borderBottom: "1px solid var(--ink)",
@@ -199,7 +198,6 @@ export default function LeaderboardPage() {
               <span style={{ textAlign: "right" }}>Reviews</span>
               <span style={{ textAlign: "right" }}>POT Earned</span>
               <span style={{ textAlign: "right" }}>Slashes</span>
-              <span style={{ textAlign: "right" }}>Joined</span>
             </div>
 
             {/* body rows (ranks 4+) */}
@@ -214,7 +212,7 @@ export default function LeaderboardPage() {
                   key={e.address}
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "60px 1.4fr 1fr 0.9fr 0.7fr 1fr 0.7fr 0.8fr",
+                    gridTemplateColumns: "60px 1.4fr 1fr 0.9fr 0.7fr 1fr 0.7fr",
                     padding: "0.875rem 1.25rem",
                     borderBottom: idx < pageRows.length - 1 ? "1px solid var(--line)" : "none",
                     background: isMe ? "var(--paper)" : "transparent",
@@ -273,12 +271,6 @@ export default function LeaderboardPage() {
                     {e.slashCount}
                   </span>
 
-                  <span style={{
-                    fontFamily: "var(--font-mono,monospace)", textAlign: "right",
-                    fontSize: ".75rem", color: "var(--ink-4)",
-                  }}>
-                    S1
-                  </span>
                 </div>
               );
             })}

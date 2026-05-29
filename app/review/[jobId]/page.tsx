@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { ConsensusBar } from "@/components/review/ConsensusBar";
@@ -11,47 +11,12 @@ import { useReviewEngine } from "@/hooks/useReviewEngine";
 import { useEscrow } from "@/hooks/useEscrow";
 import { useReputation } from "@/hooks/useReputation";
 import { useWallet } from "@/hooks/useWallet";
+import { useApi } from "@/hooks/useApi";
+import { useJob } from "@/hooks/useJob";
 import { useToastContext } from "@/context/ToastContext";
 import { formatAddress } from "@/lib/format";
-import { MIN_REVIEWER_REPUTATION } from "@/lib/constants";
+import { MIN_REVIEWER_REPUTATION, IS_LIVE_MODE } from "@/lib/constants";
 import type { FindingSeverity } from "@/types/review.types";
-
-// ── Mock contract source lines ────────────────────────────────
-const MOCK_SRC = [
-  { n:  1, c: "#[ink::contract]",                      flag: null },
-  { n:  2, c: "mod lending_pool {",                     flag: null },
-  { n:  3, c: "    use ink::storage::Mapping;",         flag: null },
-  { n:  4, c: "",                                        flag: null },
-  { n:  5, c: "    #[ink(storage)]",                    flag: null },
-  { n:  6, c: "    pub struct LendingPool {",            flag: null },
-  { n:  7, c: "        total_supply: Balance,",          flag: null },
-  { n:  8, c: "        balances: Mapping<AccountId, Balance>,", flag: null },
-  { n:  9, c: "        borrowed: Mapping<AccountId, Balance>,", flag: null },
-  { n: 10, c: "    }",                                  flag: null },
-  { n: 11, c: "",                                        flag: null },
-  { n: 12, c: "    impl LendingPool {",                 flag: null },
-  { n: 13, c: "        #[ink(message, payable)]",        flag: null },
-  { n: 14, c: "        pub fn deposit(&mut self) -> Result<(), Error> {", flag: null },
-  { n: 15, c: "            let caller = self.env().caller();", flag: null },
-  { n: 16, c: "            let value = self.env().transferred_value();", flag: null },
-  { n: 17, c: "            let bal = self.balances.get(caller).unwrap_or(0);", flag: null },
-  { n: 18, c: "            self.balances.insert(caller, &(bal + value));", flag: null },
-  { n: 19, c: "            self.total_supply += value;",  flag: null },
-  { n: 20, c: "            Ok(())",                      flag: null },
-  { n: 21, c: "        }",                               flag: null },
-  { n: 22, c: "        #[ink(message)]",                 flag: null },
-  { n: 23, c: "        pub fn borrow(&mut self, amount: Balance) -> Result<(), Error> {", flag: "critical" },
-  { n: 24, c: "            let caller = self.env().caller();", flag: "critical" },
-  { n: 25, c: "            // external call BEFORE state mutation — reentrancy risk", flag: "critical" },
-  { n: 26, c: "            token.transfer(caller, amount)?;", flag: "critical" },
-  { n: 27, c: "            let existing = self.borrowed.get(caller).unwrap_or(0);", flag: null },
-  { n: 28, c: "            self.borrowed.insert(caller, &(existing + amount));", flag: null },
-  { n: 29, c: "            self.total_supply -= amount;", flag: "amber" },
-  { n: 30, c: "            Ok(())",                      flag: null },
-  { n: 31, c: "        }",                               flag: null },
-  { n: 32, c: "    }",                                   flag: null },
-  { n: 33, c: "}",                                       flag: null },
-] as const;
 
 // ── Severity → chip class ─────────────────────────────────────
 const SEV_CHIP: Record<FindingSeverity, string> = {
@@ -70,7 +35,7 @@ const SEV_LABEL: Record<FindingSeverity, string> = {
   Informational: "INFO",
 };
 
-// ── Status → chip class (handles both ReviewJobStatus and EscrowStatus) ──
+// ── Status → chip class ───────────────────────────────────────
 function statusChip(status: string) {
   if (status === "Open" || status === "Staked") return "chip-violet";
   if (status === "InReview")                    return "chip-amber";
@@ -88,40 +53,15 @@ function titleFromId(id: string) {
     .join(" ");
 }
 
-// ── Code line component ───────────────────────────────────────
-function CodeLine({ n, c, flag, highlighted, onClick }: {
-  n: number; c: string; flag: string | null; highlighted: boolean; onClick: () => void;
-}) {
-  const borderColor = flag === "critical" ? "var(--danger)" : flag === "amber" ? "var(--warn)" : "transparent";
-  const bgColor     = flag === "critical" ? "rgba(185,28,28,0.05)" : flag === "amber" ? "rgba(202,138,4,0.05)" : "transparent";
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        display: "flex",
-        cursor: "pointer",
-        outline: highlighted ? "1px solid var(--ink)" : "none",
-        outlineOffset: -1,
-        background: bgColor,
-        borderLeft: `3px solid ${borderColor}`,
-        minHeight: 22,
-      }}
-    >
-      <span style={{
-        width: 48, minWidth: 48, textAlign: "right", paddingRight: 12, paddingLeft: 8,
-        color: "var(--ink-5)", fontFamily: "var(--font-mono,monospace)", fontSize: ".75rem",
-        lineHeight: "22px", borderRight: "1px solid var(--line)", userSelect: "none", flexShrink: 0,
-      }}>
-        {n}
-      </span>
-      <span style={{
-        fontFamily: "var(--font-mono,monospace)", fontSize: ".78rem", lineHeight: "22px",
-        paddingLeft: 16, paddingRight: 12, whiteSpace: "pre", color: "var(--ink-2)",
-      }}>
-        {c || " "}
-      </span>
-    </div>
-  );
+// ── Block time formatter ──────────────────────────────────────
+function formatBlocksRemaining(blocks: number): string {
+  if (blocks <= 0) return "Closed";
+  const secs = blocks * 2;
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (h > 24) return `~${Math.ceil(h / 24)}d`;
+  if (h > 0) return `~${h}h ${m}m`;
+  return `~${m}m`;
 }
 
 // ── Page ─────────────────────────────────────────────────────
@@ -130,6 +70,7 @@ interface Params { params: Promise<{ jobId: string }>; }
 export default function JobDetailPage({ params }: Params) {
   const { jobId } = use(params);
   const { isConnected, selectedAccount } = useWallet();
+  const { api } = useApi();
   const { toast } = useToastContext();
 
   const {
@@ -140,7 +81,23 @@ export default function JobDetailPage({ params }: Params) {
 
   const { escrowState, refetchState } = useEscrow();
   const { score } = useReputation(selectedAccount?.address);
-  const [highlightedLine, setHighlightedLine] = useState<number | null>(null);
+  const { job } = useJob(jobId);
+
+  // Live: subscribe to current block number to compute time remaining
+  const [currentBlock, setCurrentBlock] = useState<number | null>(null);
+  const blockUnsubRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!IS_LIVE_MODE || !api) return;
+    (async () => {
+      blockUnsubRef.current = (await (api.derive as unknown as {
+        chain: { bestNumber: (cb: (n: unknown) => void) => Promise<() => void> }
+      }).chain.bestNumber((n: unknown) => {
+        setCurrentBlock(Number(n?.toString?.() ?? "0"));
+      })) as () => void;
+    })();
+    return () => { blockUnsubRef.current?.(); };
+  }, [api]);
 
   useEffect(() => { if (jobId) refetchState(jobId); }, [jobId, refetchState]);
 
@@ -163,10 +120,31 @@ export default function JobDetailPage({ params }: Params) {
     }
   };
 
-  const jobTitle    = titleFromId(jobId);
-  const bountyPOT   = escrowState ? escrowState.amount / 1_000_000_000_000n : 0n;
+  const jobTitle     = job?.description
+    ? job.description.slice(0, 60) + (job.description.length > 60 ? "…" : "")
+    : titleFromId(jobId);
+  const bountyPOT    = escrowState ? escrowState.amount / 1_000_000_000_000n : 0n;
   const criticalCount = findings.filter((f) => f.severity === "Critical").length;
   const amberCount    = findings.filter((f) => f.severity === "High" || f.severity === "Medium").length;
+
+  // Time remaining
+  const closesAt = job?.closesAtBlock ?? escrowState?.openedAtBlock;
+  let timeLabel = "—";
+  if (closesAt) {
+    if (IS_LIVE_MODE && currentBlock !== null) {
+      timeLabel = formatBlocksRemaining(closesAt - currentBlock);
+    } else if (job?.closesAtBlock && job?.openedAtBlock) {
+      // Mock: show window length (we don't know current block exactly)
+      const windowBlocks = job.closesAtBlock - job.openedAtBlock;
+      timeLabel = `${formatBlocksRemaining(windowBlocks)} window`;
+    }
+  }
+
+  // Contract hash display
+  const contractHash = job?.contractHash ?? escrowState?.jobId ?? "";
+  const shortHash = contractHash.length > 18
+    ? `${contractHash.slice(0, 10)}…${contractHash.slice(-6)}`
+    : contractHash;
 
   return (
     <AppShell>
@@ -181,21 +159,16 @@ export default function JobDetailPage({ params }: Params) {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span style={{ fontSize: "1rem", fontWeight: 600, color: "var(--ink)" }}>{jobTitle}</span>
-                <span className={`chip ${statusChip(escrowState?.status ?? "")}`}>
-                  {escrowState?.status ?? "—"}
+                <span className={`chip ${statusChip(escrowState?.status ?? job?.status ?? "")}`}>
+                  {escrowState?.status ?? job?.status ?? "—"}
                 </span>
                 <span className="chip chip-slate" style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".62rem" }}>ink!</span>
               </div>
-              <div style={{ display: "flex", gap: 14, marginTop: 4, fontSize: ".72rem", color: "var(--ink-3)" }}>
+              <div style={{ display: "flex", gap: 14, marginTop: 4, fontSize: ".72rem", color: "var(--ink-3)", flexWrap: "wrap" }}>
                 {escrowState?.submitter && (
-                  <>
-                    <span style={{ fontFamily: "var(--font-mono,monospace)" }}>
-                      {formatAddress(escrowState.submitter, 8)}
-                    </span>
-                    <span>Submitted by <span style={{ fontFamily: "var(--font-mono,monospace)" }}>{formatAddress(escrowState.submitter, 6)}</span></span>
-                  </>
+                  <span>Submitted by <span style={{ fontFamily: "var(--font-mono,monospace)" }}>{formatAddress(escrowState.submitter, 6)}</span></span>
                 )}
-                <span>{MOCK_SRC.length} lines</span>
+                <span style={{ fontFamily: "var(--font-mono,monospace)", color: "var(--ink-5)" }}>{shortHash}</span>
               </div>
             </div>
           </div>
@@ -210,9 +183,11 @@ export default function JobDetailPage({ params }: Params) {
             <div style={{ width: 1, height: 32, background: "var(--line-2)" }} />
             <div style={{ textAlign: "right" }}>
               <div style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)", lineHeight: 1 }}>
-                ~4h 00m
+                {timeLabel}
               </div>
-              <div style={{ fontSize: ".66rem", letterSpacing: ".05em", textTransform: "uppercase", color: "var(--ink-4)" }}>LEFT</div>
+              <div style={{ fontSize: ".66rem", letterSpacing: ".05em", textTransform: "uppercase", color: "var(--ink-4)" }}>
+                {IS_LIVE_MODE && currentBlock !== null ? "LEFT" : "WINDOW"}
+              </div>
             </div>
           </div>
         </div>
@@ -220,9 +195,9 @@ export default function JobDetailPage({ params }: Params) {
         {/* ── 2-column workspace ── */}
         <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: 16, alignItems: "flex-start" }}>
 
-          {/* LEFT — Code panel */}
+          {/* LEFT — Contract info panel */}
           <div className="glass-strong" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            {/* Code toolbar */}
+            {/* Toolbar */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "0.6rem 1rem", borderBottom: "1px solid var(--line)", background: "var(--bg-elevated)",
@@ -231,51 +206,98 @@ export default function JobDetailPage({ params }: Params) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ink-4)" }}>
                   <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
                 </svg>
-                <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".78rem", color: "var(--ink)" }}>lib.rs</span>
-                <span className="chip chip-slate" style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".6rem" }}>Rust · ink! v5</span>
+                <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".78rem", color: "var(--ink)" }}>Contract</span>
+                <span className="chip chip-slate" style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".6rem" }}>ink!</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button className="btn btn-ghost btn-sm" style={{ padding: "0.3rem 0.55rem" }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                  </svg>
-                  Find
-                </button>
-                <button className="btn btn-ghost btn-sm" style={{ padding: "0.3rem 0.55rem" }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                  </svg>
-                </button>
-                <button className="btn btn-ghost btn-sm" style={{ padding: "0.3rem 0.55rem" }}>
+              {job?.githubUrl && (
+                <a
+                  href={job.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-ghost btn-sm"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none" }}
+                >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
                   </svg>
-                </button>
+                  View on GitHub
+                </a>
+              )}
+            </div>
+
+            {/* Contract body */}
+            <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* Description */}
+              {job?.description ? (
+                <div>
+                  <div className="label-cap" style={{ marginBottom: 8 }}>Description</div>
+                  <p style={{ margin: 0, fontSize: ".88rem", color: "var(--ink-2)", lineHeight: 1.65 }}>
+                    {job.description}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "center", padding: "1rem 0" }}>
+                  <Spinner size="sm" />
+                </div>
+              )}
+
+              {/* Hash */}
+              <div>
+                <div className="label-cap" style={{ marginBottom: 8 }}>Contract hash</div>
+                <div style={{
+                  fontFamily: "var(--font-mono,monospace)", fontSize: ".8rem", padding: "0.6rem 0.75rem",
+                  background: "var(--bg-sunken)", border: "1px solid var(--line)", wordBreak: "break-all",
+                  color: "var(--ink-2)", lineHeight: 1.5,
+                }}>
+                  {contractHash || "—"}
+                </div>
               </div>
+
+              {/* GitHub link (if set) */}
+              {job?.githubUrl && (
+                <div>
+                  <div className="label-cap" style={{ marginBottom: 8 }}>Source repository</div>
+                  <a
+                    href={job.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontFamily: "var(--font-mono,monospace)", fontSize: ".8rem",
+                      color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: 6,
+                    }}
+                  >
+                    {job.githubUrl}
+                  </a>
+                </div>
+              )}
+
+              {/* Block range */}
+              {job && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "Opened at block", value: `#${job.openedAtBlock.toLocaleString()}` },
+                    { label: "Closes at block",  value: `#${job.closesAtBlock.toLocaleString()}` },
+                  ].map((r) => (
+                    <div key={r.label} style={{ padding: "0.625rem 0.75rem", background: "var(--bg-elevated)", border: "1px solid var(--line)" }}>
+                      <div className="label-cap" style={{ marginBottom: 4 }}>{r.label}</div>
+                      <div style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".85rem", fontWeight: 600, color: "var(--ink)" }}>
+                        {r.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Code body */}
-            <div style={{ background: "var(--background)", maxHeight: 620, overflow: "auto" }}>
-              {MOCK_SRC.map((line) => (
-                <CodeLine
-                  key={line.n}
-                  n={line.n}
-                  c={line.c}
-                  flag={line.flag}
-                  highlighted={highlightedLine === line.n}
-                  onClick={() => setHighlightedLine(line.n === highlightedLine ? null : line.n)}
-                />
-              ))}
-            </div>
-
-            {/* Code footer */}
+            {/* Footer */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "0.45rem 1rem", borderTop: "1px solid var(--line)",
               background: "var(--bg-elevated)", fontSize: ".66rem",
             }}>
               <span style={{ fontFamily: "var(--font-mono,monospace)", color: "var(--ink-4)" }}>
-                UTF-8 · LF · {MOCK_SRC.length} lines
+                {findings.length} findings filed
               </span>
               <div style={{ display: "flex", gap: 12, color: "var(--ink-3)" }}>
                 {criticalCount > 0 && (

@@ -35,3 +35,7 @@ export const LEADERBOARD_SIZE = 50;
 
 export const APP_NAME    = "PortalReview";
 export const APP_DAPP_ID = "portal-review";
+
+// Alice's well-known dev account — used as caller for unauthenticated read-only contract queries
+// Valid on any substrate --dev node; replace with a real account for production.
+export const ZERO_CALLER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";

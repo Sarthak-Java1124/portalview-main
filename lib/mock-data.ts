@@ -245,6 +245,10 @@ export function getJobs(offset: number, limit: number): ReviewJob[] {
   return _jobs.slice(offset, offset + limit);
 }
 
+export function getJob(id: string): ReviewJob | null {
+  return _jobs.find((j) => j.id === id) ?? null;
+}
+
 export function addJob(
   job: ReviewJob,
   escrow: EscrowState,

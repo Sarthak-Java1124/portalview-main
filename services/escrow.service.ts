@@ -34,7 +34,7 @@ export async function queryEscrowState(
   jobId: string
 ): Promise<EscrowState | null> {
   try {
-    const { result, output } = await contract.query["get_state"](
+    const { result, output } = await contract.query["getState"](
       caller,
       { gasLimit: buildGasLimit(api), storageDepositLimit: null },
       jobId
@@ -45,7 +45,9 @@ export async function queryEscrowState(
     const value = extractOkValue(output);
     return parseEscrowState(value);
   } catch (cause) {
-    throw new EscrowError("Failed to query escrow state", cause);
+    const msg = cause instanceof Error ? cause.message : String(cause);
+    console.error("[escrow] queryEscrowState failed:", cause);
+    throw new EscrowError(`Failed to query escrow state: ${msg}`, cause);
   }
 }
 
