@@ -39,14 +39,14 @@ function AuthForm() {
     try {
       if (mode === "signin") {
         await signIn(email, password);
-        router.push(next);
+        // navigation handled by the useEffect above once user state is set
       } else {
         if (!username.trim()) throw new Error("Username is required");
         if (username.trim().length < 3) throw new Error("Username must be at least 3 characters");
         if (!intent) throw new Error("Please select your intent");
         if (password.length < 8) throw new Error("Password must be at least 8 characters");
         await signUp(email, password, username, intent);
-        router.push(next);
+        // navigation handled by the useEffect above once user state is set
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

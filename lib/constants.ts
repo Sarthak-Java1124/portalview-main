@@ -5,6 +5,11 @@ const _escrowAddr = process.env.NEXT_PUBLIC_ESCROW_ADDRESS        ?? "";
 const _repAddr    = process.env.NEXT_PUBLIC_REPUTATION_ADDRESS    ?? "";
 const _engAddr    = process.env.NEXT_PUBLIC_REVIEW_ENGINE_ADDRESS ?? "";
 
+// NEXT_PUBLIC_DEMO_MODE=true forces mock data even when contract addresses are set.
+// Set this in your Vercel/Netlify env vars so distributed users get the demo experience
+// without needing a running local Portaldot node.
+const _forceDemo  = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 export const CONFIG = {
   wsProviderUrl:       _wsUrl,
   escrowAddress:       _escrowAddr,
@@ -12,8 +17,8 @@ export const CONFIG = {
   reviewEngineAddress: _engAddr,
 } as const;
 
-/** True when all four env vars are set and the app can talk to a live Portaldot node. */
-export const IS_LIVE_MODE = Boolean(_wsUrl && _escrowAddr && _repAddr && _engAddr);
+/** True when all four env vars are set, a live node URL is present, and demo mode is off. */
+export const IS_LIVE_MODE = !_forceDemo && Boolean(_wsUrl && _escrowAddr && _repAddr && _engAddr);
 
 /** 2-of-N consensus threshold — must match CONSENSUS_THRESHOLD in review_engine.rs. */
 export const CONSENSUS_THRESHOLD = 2;
