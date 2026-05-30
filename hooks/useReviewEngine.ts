@@ -6,7 +6,7 @@ import { useWallet } from "./useWallet";
 import { getConsensus, getFindings, addFinding, delay, mockTxHash } from "@/lib/mock-data";
 import { loadAbiJson, createContract } from "@/services/contract.service";
 import { queryConsensus, queryFindings, buildSubmitFindingTx } from "@/services/reviewEngine.service";
-import { IS_LIVE_MODE, CONFIG, ZERO_CALLER } from "@/lib/constants";
+import { USE_LIVE_TXS, CONFIG, ZERO_CALLER } from "@/lib/constants";
 import type { ConsensusState, Finding, FindingSeverity } from "@/types/review.types";
 import type { TxStatus } from "@/types/staking.types";
 import type { Signer, SubmittableExtrinsic } from "@polkadot/api/types";
@@ -48,7 +48,7 @@ export function useReviewEngine(jobId?: string): UseReviewEngineResult {
   }, []);
 
   const refetchConsensus = useCallback(async (id: string) => {
-    if (IS_LIVE_MODE && api) {
+    if (USE_LIVE_TXS && api) {
       try {
         const caller = selectedAccount?.address ?? ZERO_CALLER;
         const abi = await loadAbiJson("review_engine");
@@ -71,7 +71,7 @@ export function useReviewEngine(jobId?: string): UseReviewEngineResult {
     setIsLoading(true);
     setError(null);
 
-    if (IS_LIVE_MODE && api) {
+    if (USE_LIVE_TXS && api) {
       try {
         const caller = selectedAccount?.address ?? ZERO_CALLER;
         const abi = await loadAbiJson("review_engine");
@@ -148,7 +148,7 @@ export function useReviewEngine(jobId?: string): UseReviewEngineResult {
     ): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      if (IS_LIVE_MODE && api && signer) {
+      if (USE_LIVE_TXS && api && signer) {
         const abi = await loadAbiJson("review_engine");
         const contract = createContract(api, abi, CONFIG.reviewEngineAddress);
         const hash = await _execLiveTx(() =>

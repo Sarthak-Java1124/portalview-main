@@ -6,7 +6,7 @@ import { useWallet } from "./useWallet";
 import { MOCK_LEADERBOARD, delay } from "@/lib/mock-data";
 import { loadAbiJson, createContract } from "@/services/contract.service";
 import { queryLeaderboard } from "@/services/reputation.service";
-import { IS_LIVE_MODE, CONFIG, LEADERBOARD_SIZE, ZERO_CALLER } from "@/lib/constants";
+import { USE_LIVE_TXS, CONFIG, LEADERBOARD_SIZE, ZERO_CALLER } from "@/lib/constants";
 import type { ReputationScore } from "@/types/reputation.types";
 
 interface UseLeaderboardResult {
@@ -33,7 +33,7 @@ export function useLeaderboard(): UseLeaderboardResult {
     setIsLoading(true);
     setError(null);
 
-    if (IS_LIVE_MODE && api) {
+    if (USE_LIVE_TXS && api) {
       try {
         const caller = selectedAccount?.address ?? ZERO_CALLER;
         const abi = await loadAbiJson("reputation");

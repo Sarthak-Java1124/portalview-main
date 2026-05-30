@@ -6,7 +6,7 @@ import { useWallet } from "./useWallet";
 import { getJob } from "@/lib/mock-data";
 import { loadAbiJson, createContract } from "@/services/contract.service";
 import { queryJobs } from "@/services/reviewEngine.service";
-import { IS_LIVE_MODE, CONFIG, ZERO_CALLER } from "@/lib/constants";
+import { USE_LIVE_TXS, CONFIG, ZERO_CALLER } from "@/lib/constants";
 import type { ReviewJob } from "@/types/review.types";
 
 export function useJob(jobId: string | null): { job: ReviewJob | null; isLoading: boolean } {
@@ -24,7 +24,7 @@ export function useJob(jobId: string | null): { job: ReviewJob | null; isLoading
   useEffect(() => {
     if (!jobId) { setIsLoading(false); return; }
 
-    if (IS_LIVE_MODE && api) {
+    if (USE_LIVE_TXS && api) {
       (async () => {
         try {
           const caller = selectedAccount?.address ?? ZERO_CALLER;

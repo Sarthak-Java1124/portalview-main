@@ -6,10 +6,6 @@ export const runtime = "nodejs";
 const FAUCET_AMOUNT_PLANCK = 10_000n * 1_000_000_000_000n; // 10,000 POT
 
 export async function POST(req: NextRequest) {
-  if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json({ error: "Faucet only available in development" }, { status: 403 });
-  }
-
   const wsUrl = process.env.NEXT_PUBLIC_WS_PROVIDER_URL ?? "ws://127.0.0.1:9944";
   if (!wsUrl) {
     return NextResponse.json({ error: "NEXT_PUBLIC_WS_PROVIDER_URL is not set" }, { status: 500 });

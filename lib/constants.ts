@@ -20,6 +20,14 @@ export const CONFIG = {
 /** True when all four env vars are set, a live node URL is present, and demo mode is off. */
 export const IS_LIVE_MODE = !_forceDemo && Boolean(_wsUrl && _escrowAddr && _repAddr && _engAddr);
 
+/**
+ * True when IS_LIVE_MODE is on AND mock-tx override is NOT set.
+ * Set NEXT_PUBLIC_MOCK_TXS=true to keep the WS connection live (node status shows "connected")
+ * while routing all transactions and balance reads through simulation — useful for demos
+ * where the connected account has no testnet POT.
+ */
+export const USE_LIVE_TXS = IS_LIVE_MODE && process.env.NEXT_PUBLIC_MOCK_TXS !== "true";
+
 /** 2-of-N consensus threshold — must match CONSENSUS_THRESHOLD in review_engine.rs. */
 export const CONSENSUS_THRESHOLD = 2;
 

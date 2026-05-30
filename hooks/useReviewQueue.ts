@@ -6,7 +6,7 @@ import { useWallet } from "./useWallet";
 import { getJobs, delay } from "@/lib/mock-data";
 import { loadAbiJson, createContract } from "@/services/contract.service";
 import { queryJobs } from "@/services/reviewEngine.service";
-import { IS_LIVE_MODE, CONFIG, PAGE_SIZE, ZERO_CALLER } from "@/lib/constants";
+import { USE_LIVE_TXS, CONFIG, PAGE_SIZE, ZERO_CALLER } from "@/lib/constants";
 import type { ReviewJob } from "@/types/review.types";
 
 interface UseReviewQueueResult {
@@ -37,7 +37,7 @@ export function useReviewQueue(): UseReviewQueueResult {
     setIsLoading(true);
     setError(null);
 
-    if (IS_LIVE_MODE && api) {
+    if (USE_LIVE_TXS && api) {
       try {
         const caller = selectedAccount?.address ?? ZERO_CALLER;
         const abi = await loadAbiJson("review_engine");

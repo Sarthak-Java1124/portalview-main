@@ -220,7 +220,7 @@ export default function SubmitPage() {
   return (
     <AppShell>
       <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 8 }}>
-        {IS_LIVE_MODE && process.env.NODE_ENV === "development" && <DevFaucet />}
+        {IS_LIVE_MODE && <DevFaucet />}
         <StepIndicator current={step} />
 
         <div className="glass-strong" style={{ padding: "1.75rem" }}>

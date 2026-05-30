@@ -15,7 +15,7 @@ import { useApi } from "@/hooks/useApi";
 import { useJob } from "@/hooks/useJob";
 import { useToastContext } from "@/context/ToastContext";
 import { formatAddress } from "@/lib/format";
-import { MIN_REVIEWER_REPUTATION, IS_LIVE_MODE } from "@/lib/constants";
+import { MIN_REVIEWER_REPUTATION, USE_LIVE_TXS } from "@/lib/constants";
 import type { FindingSeverity } from "@/types/review.types";
 
 // ── Severity → chip class ─────────────────────────────────────
@@ -88,7 +88,7 @@ export default function JobDetailPage({ params }: Params) {
   const blockUnsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!IS_LIVE_MODE || !api) return;
+    if (!USE_LIVE_TXS || !api) return;
     (async () => {
       blockUnsubRef.current = (await (api.derive as unknown as {
         chain: { bestNumber: (cb: (n: unknown) => void) => Promise<() => void> }
@@ -131,7 +131,7 @@ export default function JobDetailPage({ params }: Params) {
   const closesAt = job?.closesAtBlock ?? escrowState?.openedAtBlock;
   let timeLabel = "—";
   if (closesAt) {
-    if (IS_LIVE_MODE && currentBlock !== null) {
+    if (USE_LIVE_TXS && currentBlock !== null) {
       timeLabel = formatBlocksRemaining(closesAt - currentBlock);
     } else if (job?.closesAtBlock && job?.openedAtBlock) {
       // Mock: show window length (we don't know current block exactly)
@@ -186,7 +186,7 @@ export default function JobDetailPage({ params }: Params) {
                 {timeLabel}
               </div>
               <div style={{ fontSize: ".66rem", letterSpacing: ".05em", textTransform: "uppercase", color: "var(--ink-4)" }}>
-                {IS_LIVE_MODE && currentBlock !== null ? "LEFT" : "WINDOW"}
+                {USE_LIVE_TXS && currentBlock !== null ? "LEFT" : "WINDOW"}
               </div>
             </div>
           </div>

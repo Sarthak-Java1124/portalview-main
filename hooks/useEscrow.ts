@@ -6,7 +6,7 @@ import { useWallet } from "./useWallet";
 import { getEscrow, addJob, updateEscrowStatus, delay, mockTxHash } from "@/lib/mock-data";
 import { loadAbiJson, createContract } from "@/services/contract.service";
 import { queryEscrowState, buildStakeTx, buildReleaseTx, buildCancelTx } from "@/services/escrow.service";
-import { IS_LIVE_MODE, CONFIG, REVIEW_WINDOW_BLOCKS, CONSENSUS_THRESHOLD } from "@/lib/constants";
+import { USE_LIVE_TXS, CONFIG, REVIEW_WINDOW_BLOCKS, CONSENSUS_THRESHOLD } from "@/lib/constants";
 import type { EscrowState, TxStatus } from "@/types/staking.types";
 import type { ReviewJob, ConsensusState } from "@/types/review.types";
 import type { Signer, SubmittableExtrinsic } from "@polkadot/api/types";
@@ -52,7 +52,7 @@ export function useEscrow(): UseEscrowResult {
   const refetchState = useCallback(async (jobId: string) => {
     setIsLoadingState(true);
 
-    if (IS_LIVE_MODE && api && selectedAccount) {
+    if (USE_LIVE_TXS && api && selectedAccount) {
       try {
         const abi = await loadAbiJson("escrow");
         const contract = createContract(api, abi, CONFIG.escrowAddress);
@@ -144,7 +144,7 @@ export function useEscrow(): UseEscrowResult {
     ): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      if (IS_LIVE_MODE && api && signer) {
+      if (USE_LIVE_TXS && api && signer) {
         const abi = await loadAbiJson("escrow");
         const contract = createContract(api, abi, CONFIG.escrowAddress);
         const hash = await _execLiveTx(() => buildStakeTx(api, contract, jobId, description, amount));
@@ -192,7 +192,7 @@ export function useEscrow(): UseEscrowResult {
     async (jobId: string): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      if (IS_LIVE_MODE && api && signer) {
+      if (USE_LIVE_TXS && api && signer) {
         const abi = await loadAbiJson("escrow");
         const contract = createContract(api, abi, CONFIG.escrowAddress);
         const hash = await _execLiveTx(() => buildReleaseTx(api, contract, jobId));
@@ -212,7 +212,7 @@ export function useEscrow(): UseEscrowResult {
     async (jobId: string): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      if (IS_LIVE_MODE && api && signer) {
+      if (USE_LIVE_TXS && api && signer) {
         const abi = await loadAbiJson("escrow");
         const contract = createContract(api, abi, CONFIG.escrowAddress);
         const hash = await _execLiveTx(() => buildCancelTx(api, contract, jobId));

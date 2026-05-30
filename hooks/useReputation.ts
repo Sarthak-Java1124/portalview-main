@@ -6,7 +6,7 @@ import { useWallet } from "./useWallet";
 import { getReputationScore, delay, mockTxHash } from "@/lib/mock-data";
 import { loadAbiJson, createContract } from "@/services/contract.service";
 import { queryScore, buildSlashTx, buildRewardTx } from "@/services/reputation.service";
-import { IS_LIVE_MODE, CONFIG } from "@/lib/constants";
+import { USE_LIVE_TXS, CONFIG } from "@/lib/constants";
 import { scoreToTier } from "@/lib/format";
 import type { ReputationScore } from "@/types/reputation.types";
 import type { TxStatus } from "@/types/staking.types";
@@ -46,7 +46,7 @@ export function useReputation(watchAddress?: string): UseReputationResult {
     setIsLoading(true);
     setError(null);
 
-    if (IS_LIVE_MODE && api && selectedAccount) {
+    if (USE_LIVE_TXS && api && selectedAccount) {
       try {
         const abi = await loadAbiJson("reputation");
         const contract = createContract(api, abi, CONFIG.reputationAddress);
@@ -125,7 +125,7 @@ export function useReputation(watchAddress?: string): UseReputationResult {
     async (address: string, jobId: string, amount: bigint): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      if (IS_LIVE_MODE && api && signer) {
+      if (USE_LIVE_TXS && api && signer) {
         const abi = await loadAbiJson("reputation");
         const contract = createContract(api, abi, CONFIG.reputationAddress);
         const hash = await _execLiveTx(() => buildSlashTx(api, contract, address, jobId, amount));
@@ -150,7 +150,7 @@ export function useReputation(watchAddress?: string): UseReputationResult {
     async (address: string, jobId: string, amount: bigint): Promise<string> => {
       if (!selectedAccount) throw new Error("Wallet not connected");
 
-      if (IS_LIVE_MODE && api && signer) {
+      if (USE_LIVE_TXS && api && signer) {
         const abi = await loadAbiJson("reputation");
         const contract = createContract(api, abi, CONFIG.reputationAddress);
         const hash = await _execLiveTx(() => buildRewardTx(api, contract, address, jobId, amount));

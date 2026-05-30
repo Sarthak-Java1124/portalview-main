@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ReviewQueue } from "@/components/review/ReviewQueue";
+import { DevFaucet } from "@/components/dev/DevFaucet";
 import { useReviewQueue } from "@/hooks/useReviewQueue";
 import { useReputation } from "@/hooks/useReputation";
 import { useWallet } from "@/hooks/useWallet";
+import { IS_LIVE_MODE } from "@/lib/constants";
 
 type SortKey = "bounty" | "closing" | "newest";
 const TIER_FILTER_OPTIONS = ["All", "Senior", "Expert", "Legend"] as const;
@@ -33,6 +35,8 @@ export default function ReviewPage() {
   return (
     <AppShell>
       <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
+
+        {IS_LIVE_MODE && <DevFaucet />}
 
         {/* ── Reviewer explainer ── */}
         <div style={{

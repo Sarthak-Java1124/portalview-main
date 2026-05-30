@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useApi } from "./useApi";
-import { IS_LIVE_MODE } from "@/lib/constants";
+import { USE_LIVE_TXS } from "@/lib/constants";
 import { delay } from "@/lib/mock-data";
 
 interface BalanceState {
@@ -29,7 +29,7 @@ export function useBalance(address: string | null): BalanceState {
   }, []);
 
   useEffect(() => {
-    if (!IS_LIVE_MODE || !api || !address) {
+    if (!USE_LIVE_TXS || !api || !address) {
       let cancelled = false;
       delay(300).then(() => {
         if (!cancelled && isMounted.current) {
