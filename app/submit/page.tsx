@@ -8,6 +8,8 @@ import { TxStatusBanner } from "@/components/staking/TxStatusBanner";
 import { useEscrow } from "@/hooks/useEscrow";
 import { useWallet } from "@/hooks/useWallet";
 import { useToastContext } from "@/context/ToastContext";
+import { IS_LIVE_MODE } from "@/lib/constants";
+import { DevFaucet } from "@/components/dev/DevFaucet";
 
 // ── Preserved utilities ───────────────────────────────────────
 function generateJobId(): string {
@@ -218,6 +220,7 @@ export default function SubmitPage() {
   return (
     <AppShell>
       <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 8 }}>
+        {IS_LIVE_MODE && process.env.NODE_ENV === "development" && <DevFaucet />}
         <StepIndicator current={step} />
 
         <div className="glass-strong" style={{ padding: "1.75rem" }}>
