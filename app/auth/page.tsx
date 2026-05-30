@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useToastContext } from "@/context/ToastContext";
 import type { UserIntent } from "@/types/auth.types";
 
 type Mode = "signin" | "signup";
@@ -16,6 +17,7 @@ const INTENT_OPTIONS: { id: UserIntent; label: string; desc: string }[] = [
 
 function AuthForm() {
   const { user, isLoading, signIn, signUp } = useAuth();
+  const { toast } = useToastContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
@@ -46,10 +48,12 @@ function AuthForm() {
         if (!intent) throw new Error("Please select your intent");
         if (password.length < 8) throw new Error("Password must be at least 8 characters");
         await signUp(email, password, username, intent);
-        // navigation handled by the useEffect above once user state is set
+        toast("Account created! Check your email to confirm.", "success");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+      toast(message, "error");
     } finally {
       setSubmitting(false);
     }

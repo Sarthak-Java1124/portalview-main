@@ -12,6 +12,8 @@ import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import type { Signer } from "@polkadot/api/types";
 import { WalletError } from "@/types/api.types";
 import { APP_DAPP_ID } from "@/lib/constants";
+import { formatAddress } from "@/lib/format";
+import { useToastContext } from "@/context/ToastContext";
 
 interface WalletContextValue {
   accounts: InjectedAccountWithMeta[];
@@ -28,6 +30,7 @@ interface WalletContextValue {
 const WalletContext = createContext<WalletContextValue | null>(null);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToastContext();
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [selectedAccount, setSelectedAccount] =
     useState<InjectedAccountWithMeta | null>(null);
@@ -43,6 +46,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const resolveSignerForAccount = useCallback(
+    async (account: InjectedAccountWithMeta) => {
+      const { web3FromAddress } = await import("@polkadot/extension-dapp");
+      const injector = await web3FromAddress(account.address);
+      if (!isMounted.current) return;
+      setSigner(injector.signer as Signer);
+      setSelectedAccount(account);
+    },
+    []
+  );
+
   const connect = useCallback(async () => {
     if (!isMounted.current) return;
     setIsConnecting(true);
@@ -57,7 +71,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
       if (extensions.length === 0) {
         throw new WalletError(
-          "No Polkadot extension found. Please install the Polkadot{.js} browser extension."
+          "No Polkadot{.js} extension found. Install it and reload."
         );
       }
 
@@ -66,7 +80,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
       if (injectedAccounts.length === 0) {
         throw new WalletError(
-          "No accounts found. Please create an account in the Polkadot{.js} extension."
+          "No accounts found. Create an account in the Polkadot{.js} extension."
         );
       }
 
@@ -75,38 +89,33 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const firstAccount = injectedAccounts[0];
       if (firstAccount) {
         await resolveSignerForAccount(firstAccount);
+        if (isMounted.current) {
+          toast(`Wallet connected · ${formatAddress(firstAccount.address)}`, "success");
+        }
       }
     } catch (err) {
       if (!isMounted.current) return;
-      setError(err instanceof Error ? err.message : "Failed to connect wallet");
+      const message = err instanceof Error ? err.message : "Failed to connect wallet";
+      setError(message);
+      toast(message, "error");
     } finally {
       if (isMounted.current) setIsConnecting(false);
     }
-  }, []);
-
-  const resolveSignerForAccount = useCallback(
-    async (account: InjectedAccountWithMeta) => {
-      const { web3FromAddress } = await import("@polkadot/extension-dapp");
-      const injector = await web3FromAddress(account.address);
-      if (!isMounted.current) return;
-      setSigner(injector.signer as Signer);
-      setSelectedAccount(account);
-    },
-    []
-  );
+  }, [resolveSignerForAccount, toast]);
 
   const selectAccount = useCallback(
     async (account: InjectedAccountWithMeta) => {
       setError(null);
       try {
         await resolveSignerForAccount(account);
+        toast(`Switched to ${formatAddress(account.address)}`, "info");
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to switch account"
-        );
+        const message = err instanceof Error ? err.message : "Failed to switch account";
+        setError(message);
+        toast(message, "error");
       }
     },
-    [resolveSignerForAccount]
+    [resolveSignerForAccount, toast]
   );
 
   const disconnect = useCallback(() => {
@@ -114,7 +123,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setSelectedAccount(null);
     setSigner(null);
     setError(null);
-  }, []);
+    toast("Wallet disconnected", "info");
+  }, [toast]);
 
   return (
     <WalletContext.Provider

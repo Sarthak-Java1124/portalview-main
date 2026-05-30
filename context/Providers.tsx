@@ -1,18 +1,20 @@
 "use client";
 
-import { ApiProvider } from "./ApiContext";
-import { WalletProvider } from "./WalletContext";
 import { ToastProvider } from "./ToastContext";
 import { AuthProvider } from "./AuthContext";
+import { ApiProvider } from "./ApiContext";
+import { WalletProvider } from "./WalletContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <ApiProvider>
-        <WalletProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </WalletProvider>
-      </ApiProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <ApiProvider>
+          <WalletProvider>
+            {children}
+          </WalletProvider>
+        </ApiProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
