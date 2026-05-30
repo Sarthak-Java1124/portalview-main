@@ -1,0 +1,1 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/review_engine/wasm32-unknown-unknown/release/review_engine.wasm: /mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/review_engine/lib.rs

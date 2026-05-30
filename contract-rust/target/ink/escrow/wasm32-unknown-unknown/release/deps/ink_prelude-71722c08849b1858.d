@@ -1,0 +1,7 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/wasm32-unknown-unknown/release/deps/ink_prelude-71722c08849b1858.d: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ink_prelude-5.1.1/src/lib.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/wasm32-unknown-unknown/release/deps/libink_prelude-71722c08849b1858.rlib: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ink_prelude-5.1.1/src/lib.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/wasm32-unknown-unknown/release/deps/libink_prelude-71722c08849b1858.rmeta: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ink_prelude-5.1.1/src/lib.rs
+
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ink_prelude-5.1.1/src/lib.rs:

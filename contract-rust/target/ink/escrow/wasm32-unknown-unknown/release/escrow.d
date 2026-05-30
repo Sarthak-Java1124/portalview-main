@@ -1,0 +1,1 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/wasm32-unknown-unknown/release/escrow.wasm: /mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/escrow/lib.rs

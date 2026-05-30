@@ -1,0 +1,1 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/review_engine/release/metadata-gen: /mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/review_engine/lib.rs /tmp/cargo-contract_WNIv6k/review_engine/.ink/metadata_gen/main.rs

@@ -104,8 +104,8 @@ const SEED_JOBS: ReviewJob[] = [
     id: "job-nft-marketplace",
     submitter: ADDR.r11,
     contractHash: "0xb4e3c952d0f8e167a5c4b9d0e3f2a1b5c7e9f0d2a4c6e8b1d3f5a7c9e1b3d5f7",
-    githubUrl: "https://github.com/paritytech/ink/tree/master/examples/erc721",
-    description: "NFT marketplace with lazy minting and royalties. Review the bid escrow logic, royalty distribution edge cases, and access control on admin functions.",
+    githubUrl: "https://github.com/Sarthak-Java1124/nft-minting-contract",
+    description: "NFT minting contract with lazy minting and royalties. Review the bid escrow logic, royalty distribution edge cases, and access control on admin functions.",
     stakeAmount: 50n * POT,
     rewardPool: 50n * POT,
     status: "Open",
@@ -299,12 +299,56 @@ const SEED_ESCROW: Record<string, EscrowState> = {
   "job-oracle-feed":       { jobId: "job-oracle-feed",       submitter: ADDR.charlie,amount:  5n  * POT, status: "Cancelled", openedAtBlock: 1_238_000 },
 };
 
-// ─── Session Store ─────────────────────────────────────────────────────────
+// ─── Persistence helpers ───────────────────────────────────────────────────
 
-let _jobs: ReviewJob[]            = [...SEED_JOBS];
-let _findings: Finding[]          = [...SEED_FINDINGS];
-const _consensus = { ...SEED_CONSENSUS } as Record<string, ConsensusState>;
-const _escrow    = { ...SEED_ESCROW }    as Record<string, EscrowState>;
+// BigInt survives JSON round-trip via a tagged string prefix.
+function ser(data: unknown): string {
+  return JSON.stringify(data, (_k, v) => (typeof v === "bigint" ? `__bi__${v}` : v));
+}
+function deser<T>(raw: string): T {
+  return JSON.parse(raw, (_k, v) =>
+    typeof v === "string" && v.startsWith("__bi__") ? BigInt(v.slice(6)) : v
+  ) as T;
+}
+
+// Bump this string whenever the shape of SEED data changes so stale
+// localStorage is cleared automatically.
+const STORE_VER = "4";
+
+function storeSave(key: string, data: unknown) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(`portal:${key}`, ser(data)); } catch { /* quota */ }
+}
+
+function storeLoad<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(`portal:${key}`);
+    return raw !== null ? deser<T>(raw) : fallback;
+  } catch { return fallback; }
+}
+
+// Clear stale cache on version mismatch (runs once per browser session load).
+if (typeof window !== "undefined" && localStorage.getItem("portal:ver") !== STORE_VER) {
+  ["portal:jobs", "portal:findings", "portal:consensus", "portal:escrow"].forEach(
+    (k) => localStorage.removeItem(k)
+  );
+  localStorage.setItem("portal:ver", STORE_VER);
+}
+
+// ─── Session Store (localStorage-backed) ──────────────────────────────────
+
+let _jobs: ReviewJob[] =
+  storeLoad<ReviewJob[]>("jobs", SEED_JOBS);
+
+let _findings: Finding[] =
+  storeLoad<Finding[]>("findings", SEED_FINDINGS);
+
+const _consensus =
+  storeLoad<Record<string, ConsensusState>>("consensus", { ...SEED_CONSENSUS });
+
+const _escrow =
+  storeLoad<Record<string, EscrowState>>("escrow", { ...SEED_ESCROW });
 
 // ─── Store Accessors ───────────────────────────────────────────────────────
 
@@ -321,9 +365,12 @@ export function addJob(
   escrow: EscrowState,
   consensus: ConsensusState
 ): void {
-  _jobs             = [job, ..._jobs];
+  _jobs              = [job, ..._jobs];
   _escrow[job.id]    = escrow;
   _consensus[job.id] = consensus;
+  storeSave("jobs",      _jobs);
+  storeSave("escrow",    _escrow);
+  storeSave("consensus", _consensus);
 }
 
 export function getFindings(jobId: string): Finding[] {
@@ -345,7 +392,6 @@ export function addFinding(finding: Finding): void {
     _jobs = _jobs.map((j) => {
       if (j.id !== finding.jobId) return j;
       const updatedCount = j.findingCount + 1;
-      // Promote status when consensus is newly reached
       const updatedStatus =
         next.reached && (j.status === "Open" || j.status === "InReview")
           ? ("Consensus" as const)
@@ -355,6 +401,9 @@ export function addFinding(finding: Finding): void {
       return { ...j, findingCount: updatedCount, status: updatedStatus };
     });
   }
+  storeSave("findings",  _findings);
+  storeSave("consensus", _consensus);
+  storeSave("jobs",      _jobs);
 }
 
 export function getConsensus(jobId: string): ConsensusState | null {
@@ -368,6 +417,7 @@ export function getEscrow(jobId: string): EscrowState | null {
 export function updateEscrowStatus(jobId: string, status: EscrowStatus): void {
   if (_escrow[jobId]) {
     _escrow[jobId] = { ..._escrow[jobId], status };
+    storeSave("escrow", _escrow);
   }
 }
 

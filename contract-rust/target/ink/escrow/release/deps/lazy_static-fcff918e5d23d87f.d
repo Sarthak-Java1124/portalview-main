@@ -1,0 +1,8 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/deps/lazy_static-fcff918e5d23d87f.d: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/inline_lazy.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/deps/liblazy_static-fcff918e5d23d87f.rlib: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/inline_lazy.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/deps/liblazy_static-fcff918e5d23d87f.rmeta: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/inline_lazy.rs
+
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/lib.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/lazy_static-1.5.0/src/inline_lazy.rs:

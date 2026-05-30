@@ -1,0 +1,8 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/review_engine/release/deps/derive_syn_parse-4fd9218a92d7910e.d: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/error_macros.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/fields.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/variants.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/review_engine/release/deps/libderive_syn_parse-4fd9218a92d7910e.so: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/error_macros.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/fields.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/variants.rs
+
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/lib.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/error_macros.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/fields.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/variants.rs:

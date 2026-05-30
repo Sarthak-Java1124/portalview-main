@@ -1,0 +1,10 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/deps/log-d51e000c5c40453d.d: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/macros.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/serde.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/__private_api.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/deps/liblog-d51e000c5c40453d.rlib: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/macros.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/serde.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/__private_api.rs
+
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/deps/liblog-d51e000c5c40453d.rmeta: /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/lib.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/macros.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/serde.rs /home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/__private_api.rs
+
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/lib.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/macros.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/serde.rs:
+/home/sarthak0524/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.30/src/__private_api.rs:

@@ -1,0 +1,19 @@
+[package]
+name    = "reputation"
+version = "1.0.0"
+authors = ["PortalReview"]
+edition = "2021"
+
+[lib]
+name = "reputation"
+path = "lib.rs"
+
+[features]
+default           = ["std"]
+std               = ["ink/std", "scale/std", "scale-info/std"]
+ink-as-dependency = []
+
+[dependencies]
+ink        = { workspace = true }
+scale      = { workspace = true }
+scale-info = { workspace = true }

@@ -1,0 +1,1120 @@
+{
+  "source": {
+    "hash": "0x671709efa1798b055a0c1c6d0d878aa5072cb81adf382272aa62102f70594302",
+    "language": "ink! 5.1.1",
+    "compiler": "rustc 1.95.0",
+    "build_info": {
+      "build_mode": "Debug",
+      "cargo_contract_version": "5.0.3",
+      "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
+      "wasm_opt_settings": {
+        "keep_debug_symbols": false,
+        "optimization_passes": "Z"
+      }
+    }
+  },
+  "contract": {
+    "name": "escrow",
+    "version": "1.0.0",
+    "authors": [
+      "PortalReview"
+    ]
+  },
+  "image": null,
+  "spec": {
+    "constructors": [
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          "Instantiate the Escrow contract.",
+          "The caller becomes the admin (typically the ReviewEngine contract address",
+          "after deployment, updated via `set_admin`)."
+        ],
+        "label": "new",
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink_primitives",
+            "ConstructorResult"
+          ],
+          "type": 17
+        },
+        "selector": "0x9bae9d5e"
+      }
+    ],
+    "docs": [
+      " Escrow contract — holds POT staked by review-job submitters.",
+      "",
+      " Flow:",
+      "   1. Submitter calls `stake(job_id, description)` with attached POT.",
+      "   2. Funds are locked until consensus is reached or the job is cancelled.",
+      "   3. Admin (ReviewEngine) calls `release` to return stake to the submitter,",
+      "      or the submitter calls `cancel` to retrieve their stake before review."
+    ],
+    "environment": {
+      "accountId": {
+        "displayName": [
+          "AccountId"
+        ],
+        "type": 0
+      },
+      "balance": {
+        "displayName": [
+          "Balance"
+        ],
+        "type": 4
+      },
+      "blockNumber": {
+        "displayName": [
+          "BlockNumber"
+        ],
+        "type": 5
+      },
+      "chainExtension": {
+        "displayName": [
+          "ChainExtension"
+        ],
+        "type": 26
+      },
+      "hash": {
+        "displayName": [
+          "Hash"
+        ],
+        "type": 24
+      },
+      "maxEventTopics": 4,
+      "staticBufferSize": 16384,
+      "timestamp": {
+        "displayName": [
+          "Timestamp"
+        ],
+        "type": 25
+      }
+    },
+    "events": [
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "submitter",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "amount",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [],
+        "label": "Staked",
+        "module_path": "escrow::escrow",
+        "signature_topic": "0x0a9232142cbc0652b08b7a0891c3c5307d31830ea6aafc9c8b8655163f5358ee"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "docs": [],
+        "label": "Released",
+        "module_path": "escrow::escrow",
+        "signature_topic": "0x102d0e4d2fd37105b70721ea911f1b1b2e612d01d6988da0957245cbc0b5d4b7"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "docs": [],
+        "label": "Cancelled",
+        "module_path": "escrow::escrow",
+        "signature_topic": "0x2cd00841ce6533f8bbb2442770d54d65b1e539017f0c6b51d723df866e242472"
+      }
+    ],
+    "lang_error": {
+      "displayName": [
+        "ink",
+        "LangError"
+      ],
+      "type": 18
+    },
+    "messages": [
+      {
+        "args": [
+          {
+            "label": "new_admin",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Transfer admin rights (e.g. to the ReviewEngine contract after deployment)."
+        ],
+        "label": "set_admin",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 19
+        },
+        "selector": "0x798dcad5"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "_description",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Lock POT tokens and open a review job.",
+          " The transferred value becomes the stake that reviewers compete for."
+        ],
+        "label": "stake",
+        "mutates": true,
+        "payable": true,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 19
+        },
+        "selector": "0x5adb38de"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Return the staked amount to the submitter after consensus is confirmed.",
+          " Only callable by admin (ReviewEngine contract)."
+        ],
+        "label": "release",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 19
+        },
+        "selector": "0x3f2be152"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Cancel the job and refund the submitter.",
+          " Callable by the original submitter (before review starts) or admin."
+        ],
+        "label": "cancel",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 19
+        },
+        "selector": "0x9796e9a7"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Query the escrow record for a job. Returns `None` if the job does not exist."
+        ],
+        "label": "get_state",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 21
+        },
+        "selector": "0x3d1e8968"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Total number of jobs ever created (monotonically increasing)."
+        ],
+        "label": "job_count",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 23
+        },
+        "selector": "0xd26a4efb"
+      }
+    ]
+  },
+  "storage": {
+    "root": {
+      "layout": {
+        "struct": {
+          "fields": [
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "admin"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "struct": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xe5e35051",
+                              "ty": 3
+                            }
+                          },
+                          "name": "job_id"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xe5e35051",
+                              "ty": 0
+                            }
+                          },
+                          "name": "submitter"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xe5e35051",
+                              "ty": 4
+                            }
+                          },
+                          "name": "amount"
+                        },
+                        {
+                          "layout": {
+                            "enum": {
+                              "dispatchKey": "0xe5e35051",
+                              "name": "EscrowStatus",
+                              "variants": {
+                                "0": {
+                                  "fields": [],
+                                  "name": "None"
+                                },
+                                "1": {
+                                  "fields": [],
+                                  "name": "Staked"
+                                },
+                                "2": {
+                                  "fields": [],
+                                  "name": "Released"
+                                },
+                                "3": {
+                                  "fields": [],
+                                  "name": "Cancelled"
+                                }
+                              }
+                            }
+                          },
+                          "name": "status"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xe5e35051",
+                              "ty": 5
+                            }
+                          },
+                          "name": "opened_at_block"
+                        }
+                      ],
+                      "name": "EscrowState"
+                    }
+                  },
+                  "root_key": "0xe5e35051",
+                  "ty": 6
+                }
+              },
+              "name": "jobs"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x3dc73265",
+                      "ty": 3
+                    }
+                  },
+                  "root_key": "0x3dc73265",
+                  "ty": 13
+                }
+              },
+              "name": "job_ids"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 5
+                }
+              },
+              "name": "job_count"
+            }
+          ],
+          "name": "Escrow"
+        }
+      },
+      "root_key": "0x00000000",
+      "ty": 16
+    }
+  },
+  "types": [
+    {
+      "id": 0,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "AccountId"
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "type": {
+        "def": {
+          "array": {
+            "len": 32,
+            "type": 2
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": {
+        "def": {
+          "primitive": "u8"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": {
+        "def": {
+          "primitive": "str"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": {
+        "def": {
+          "primitive": "u128"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": {
+        "def": {
+          "primitive": "u32"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 3
+          },
+          {
+            "name": "V",
+            "type": 7
+          },
+          {
+            "name": "KeyType",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "job_id",
+                "type": 3,
+                "typeName": "String"
+              },
+              {
+                "name": "submitter",
+                "type": 0,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "amount",
+                "type": 4,
+                "typeName": "Balance"
+              },
+              {
+                "name": "status",
+                "type": 8,
+                "typeName": "EscrowStatus"
+              },
+              {
+                "name": "opened_at_block",
+                "type": 5,
+                "typeName": "u32"
+              }
+            ]
+          }
+        },
+        "path": [
+          "escrow",
+          "escrow",
+          "EscrowState"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "index": 1,
+                "name": "Staked"
+              },
+              {
+                "index": 2,
+                "name": "Released"
+              },
+              {
+                "index": 3,
+                "name": "Cancelled"
+              }
+            ]
+          }
+        },
+        "path": [
+          "escrow",
+          "escrow",
+          "EscrowStatus"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 10
+          },
+          {
+            "name": "R",
+            "type": 11
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "AutoKey"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 12
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": {
+        "def": {
+          "tuple": []
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 5
+          },
+          {
+            "name": "V",
+            "type": 3
+          },
+          {
+            "name": "KeyType",
+            "type": 14
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 10
+          },
+          {
+            "name": "R",
+            "type": 15
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 12
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "admin",
+                "type": 0,
+                "typeName": "<AccountId as::ink::storage::traits::AutoStorableHint<::ink::\nstorage::traits::ManualKey<3080483584u32, ()>,>>::Type"
+              },
+              {
+                "name": "jobs",
+                "type": 6,
+                "typeName": "<Mapping<String, EscrowState> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<1364255717u32,\n()>,>>::Type"
+              },
+              {
+                "name": "job_ids",
+                "type": 13,
+                "typeName": "<Mapping<u32, String> as::ink::storage::traits::AutoStorableHint<\n::ink::storage::traits::ManualKey<1697826621u32, ()>,>>::Type"
+              },
+              {
+                "name": "job_count",
+                "type": 5,
+                "typeName": "<u32 as::ink::storage::traits::AutoStorableHint<::ink::storage\n::traits::ManualKey<3885090727u32, ()>,>>::Type"
+              }
+            ]
+          }
+        },
+        "path": [
+          "escrow",
+          "escrow",
+          "Escrow"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 18
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 12
+          },
+          {
+            "name": "E",
+            "type": 18
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 1,
+                "name": "CouldNotReadInput"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "LangError"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 18
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 20
+          },
+          {
+            "name": "E",
+            "type": 18
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 3
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 12
+          },
+          {
+            "name": "E",
+            "type": 3
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 22
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 18
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 22
+          },
+          {
+            "name": "E",
+            "type": 18
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 7
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 7
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 5
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 18
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 5
+          },
+          {
+            "name": "E",
+            "type": 18
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 24,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "Hash"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "def": {
+          "primitive": "u64"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
+          "variant": {}
+        },
+        "path": [
+          "ink_env",
+          "types",
+          "NoChainExtension"
+        ]
+      }
+    }
+  ],
+  "version": 5
+}

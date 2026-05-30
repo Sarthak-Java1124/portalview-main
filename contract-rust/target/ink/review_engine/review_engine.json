@@ -1,0 +1,2765 @@
+{
+  "source": {
+    "hash": "0x6c11bdf1c8da9b894036f6ca2526a7c150e119c3db327e8a4b16548df843a26f",
+    "language": "ink! 5.1.1",
+    "compiler": "rustc 1.95.0",
+    "build_info": {
+      "build_mode": "Debug",
+      "cargo_contract_version": "5.0.3",
+      "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
+      "wasm_opt_settings": {
+        "keep_debug_symbols": false,
+        "optimization_passes": "Z"
+      }
+    }
+  },
+  "contract": {
+    "name": "review_engine",
+    "version": "1.0.0",
+    "authors": [
+      "PortalReview"
+    ]
+  },
+  "image": null,
+  "spec": {
+    "constructors": [
+      {
+        "args": [
+          {
+            "label": "escrow_address",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "label": "reputation_address",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "new",
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink_primitives",
+            "ConstructorResult"
+          ],
+          "type": 45
+        },
+        "selector": "0x9bae9d5e"
+      }
+    ],
+    "docs": [
+      " ReviewEngine contract — coordinates review jobs, findings, consensus, and reward distribution.",
+      "",
+      " Deployment flow:",
+      "   1. Deploy Escrow   → `escrow_address`",
+      "   2. Deploy Reputation → `reputation_address`",
+      "   3. Deploy ReviewEngine(escrow_address, reputation_address)",
+      "   4. Call Escrow::set_admin(review_engine_address)",
+      "   5. Call Reputation::set_admin(review_engine_address)",
+      "",
+      " Job lifecycle:",
+      "   1. Submitter calls `register_job(job_id, description, contract_hash)` with POT attached.",
+      "      The stake is held in this contract as the reward pool.",
+      "   2. Qualified reviewers call `submit_finding(...)` with a POT bond attached.",
+      "   3. Once `CONSENSUS_THRESHOLD` findings are submitted, consensus is marked reached.",
+      "   4. Reviewers call `claim_reward(job_id)` to collect their share of the reward pool.",
+      "   5. Admin can call `slash_reviewer(job_id, reviewer)` to forfeit a bad reviewer's bond."
+    ],
+    "environment": {
+      "accountId": {
+        "displayName": [
+          "AccountId"
+        ],
+        "type": 0
+      },
+      "balance": {
+        "displayName": [
+          "Balance"
+        ],
+        "type": 10
+      },
+      "blockNumber": {
+        "displayName": [
+          "BlockNumber"
+        ],
+        "type": 3
+      },
+      "chainExtension": {
+        "displayName": [
+          "ChainExtension"
+        ],
+        "type": 60
+      },
+      "hash": {
+        "displayName": [
+          "Hash"
+        ],
+        "type": 58
+      },
+      "maxEventTopics": 4,
+      "staticBufferSize": 16384,
+      "timestamp": {
+        "displayName": [
+          "Timestamp"
+        ],
+        "type": 59
+      }
+    },
+    "events": [
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "submitter",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "stake_amount",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 10
+            }
+          }
+        ],
+        "docs": [],
+        "label": "JobRegistered",
+        "module_path": "review_engine::review_engine",
+        "signature_topic": "0xfe17ff4379bcea895af36d594e2b6e38aeaf90ca97e56185015260939f4f7da7"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "amount",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 10
+            }
+          }
+        ],
+        "docs": [],
+        "label": "RewardClaimed",
+        "module_path": "review_engine::review_engine",
+        "signature_topic": "0xa02f21c2b3acfbfa2a4c82c07c5c7f51bd124069889d0d4d0ed6927de7bc6ab1"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "bond_forfeited",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 10
+            }
+          }
+        ],
+        "docs": [],
+        "label": "ReviewerSlashed",
+        "module_path": "review_engine::review_engine",
+        "signature_topic": "0xe3b548a143fbb5226c17c2e427f29c8de569619963debc725d52394fb1376c40"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [],
+        "label": "ConsensusReached",
+        "module_path": "review_engine::review_engine",
+        "signature_topic": "0x193f83937ede9e4b24a05111faa0a60ceaefa3f7a89c62042401fac32a61b42c"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "finding_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "docs": [],
+        "label": "FindingSubmitted",
+        "module_path": "review_engine::review_engine",
+        "signature_topic": "0x47c48e50bf4d79bb8274d8f12e6177ac4cf8e38598dc6bec8b4caf8a87bfce82"
+      }
+    ],
+    "lang_error": {
+      "displayName": [
+        "ink",
+        "LangError"
+      ],
+      "type": 46
+    },
+    "messages": [
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "description",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "contract_hash",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Register a new review job. Attach the POT stake as the transferred value.",
+          " The attached POT is held in this contract and forms the reward pool for reviewers."
+        ],
+        "label": "register_job",
+        "mutates": true,
+        "payable": true,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 47
+        },
+        "selector": "0x539c628a"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "severity",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "title",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "description",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Submit a security finding for a review job.",
+          " Attach a POT bond — this bond is forfeited if the admin slashes this finding.",
+          "",
+          " Requires:",
+          "   - Job exists and is not finalized / cancelled.",
+          "   - Reviewer has not already submitted for this job."
+        ],
+        "label": "submit_finding",
+        "mutates": true,
+        "payable": true,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 47
+        },
+        "selector": "0x6c987c9b"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Claim the reviewer's share of the reward pool after consensus is reached.",
+          "",
+          " Each reviewer who submitted a valid finding may claim once.",
+          " Reward per reviewer = `reward_pool / CONSENSUS_THRESHOLD`.",
+          " Claims are capped at `CONSENSUS_THRESHOLD` total per job (first-come-first-served)."
+        ],
+        "label": "claim_reward",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 47
+        },
+        "selector": "0x9a8353a7"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Slash a reviewer for submitting a bad / malicious finding.",
+          " Forfeits the reviewer's bond (transferred to admin) and bars them from claiming rewards.",
+          " Only callable by admin."
+        ],
+        "label": "slash_reviewer",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 47
+        },
+        "selector": "0x28c6d31a"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Mark a job as Finalized after all rewards have been distributed.",
+          " Only callable by admin."
+        ],
+        "label": "finalize_job",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 47
+        },
+        "selector": "0xb7f852a7"
+      },
+      {
+        "args": [
+          {
+            "label": "new_admin",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Transfer admin rights to a new address."
+        ],
+        "label": "set_admin",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 47
+        },
+        "selector": "0x798dcad5"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Consensus state for a job, or `None` if the job is unknown."
+        ],
+        "label": "get_consensus",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 49
+        },
+        "selector": "0xa8113377"
+      },
+      {
+        "args": [
+          {
+            "label": "offset",
+            "type": {
+              "displayName": [
+                "u32"
+              ],
+              "type": 3
+            }
+          },
+          {
+            "label": "limit",
+            "type": {
+              "displayName": [
+                "u32"
+              ],
+              "type": 3
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Paginated list of all registered jobs (ordered by registration time)."
+        ],
+        "label": "get_jobs",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 51
+        },
+        "selector": "0x13d3c67d"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " All findings submitted for a given job."
+        ],
+        "label": "get_findings",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 53
+        },
+        "selector": "0x97f97739"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Total number of registered jobs."
+        ],
+        "label": "job_count",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 55
+        },
+        "selector": "0xd26a4efb"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Bond amount deposited by a reviewer for a specific job."
+        ],
+        "label": "get_reviewer_bond",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 56
+        },
+        "selector": "0x025eb108"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Whether a reviewer has claimed their reward for a job."
+        ],
+        "label": "has_claimed",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 57
+        },
+        "selector": "0x55ea6aa3"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "reviewer",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Whether a reviewer has been slashed for a job."
+        ],
+        "label": "is_slashed",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 57
+        },
+        "selector": "0x6206fdce"
+      },
+      {
+        "args": [
+          {
+            "label": "job_id",
+            "type": {
+              "displayName": [
+                "String"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Number of reward shares claimed so far for a job."
+        ],
+        "label": "reward_claim_count",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 55
+        },
+        "selector": "0x8c055e3e"
+      }
+    ]
+  },
+  "storage": {
+    "root": {
+      "layout": {
+        "struct": {
+          "fields": [
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "admin"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "escrow_address"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "reputation_address"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 3
+                }
+              },
+              "name": "job_count"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x9bbb35be",
+                      "ty": 4
+                    }
+                  },
+                  "root_key": "0x9bbb35be",
+                  "ty": 5
+                }
+              },
+              "name": "job_ids"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "struct": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 4
+                            }
+                          },
+                          "name": "id"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 0
+                            }
+                          },
+                          "name": "submitter"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 4
+                            }
+                          },
+                          "name": "contract_hash"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 4
+                            }
+                          },
+                          "name": "description"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 10
+                            }
+                          },
+                          "name": "stake_amount"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 10
+                            }
+                          },
+                          "name": "reward_pool"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 4
+                            }
+                          },
+                          "name": "status"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 3
+                            }
+                          },
+                          "name": "opened_at_block"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 3
+                            }
+                          },
+                          "name": "closes_at_block"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc4e85225",
+                              "ty": 3
+                            }
+                          },
+                          "name": "finding_count"
+                        }
+                      ],
+                      "name": "ReviewJob"
+                    }
+                  },
+                  "root_key": "0xc4e85225",
+                  "ty": 11
+                }
+              },
+              "name": "jobs"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x02668605",
+                      "ty": 3
+                    }
+                  },
+                  "root_key": "0x02668605",
+                  "ty": 15
+                }
+              },
+              "name": "finding_counts"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "struct": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 4
+                            }
+                          },
+                          "name": "id"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 4
+                            }
+                          },
+                          "name": "job_id"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 0
+                            }
+                          },
+                          "name": "reviewer"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 4
+                            }
+                          },
+                          "name": "severity"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 4
+                            }
+                          },
+                          "name": "title"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 4
+                            }
+                          },
+                          "name": "description"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x2d14ec79",
+                              "ty": 3
+                            }
+                          },
+                          "name": "submitted_at_block"
+                        }
+                      ],
+                      "name": "Finding"
+                    }
+                  },
+                  "root_key": "0x2d14ec79",
+                  "ty": 18
+                }
+              },
+              "name": "findings"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "struct": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x20d83b82",
+                              "ty": 4
+                            }
+                          },
+                          "name": "job_id"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x20d83b82",
+                              "ty": 3
+                            }
+                          },
+                          "name": "total_findings"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x20d83b82",
+                              "ty": 3
+                            }
+                          },
+                          "name": "confirmed_findings"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x20d83b82",
+                              "ty": 3
+                            }
+                          },
+                          "name": "threshold"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x20d83b82",
+                              "ty": 23
+                            }
+                          },
+                          "name": "reached"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0x20d83b82",
+                              "ty": 3
+                            }
+                          },
+                          "name": "voting_ends"
+                        }
+                      ],
+                      "name": "ConsensusState"
+                    }
+                  },
+                  "root_key": "0x20d83b82",
+                  "ty": 24
+                }
+              },
+              "name": "consensus"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0xddece131",
+                      "ty": 23
+                    }
+                  },
+                  "root_key": "0xddece131",
+                  "ty": 28
+                }
+              },
+              "name": "has_submitted"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x3ab64172",
+                      "ty": 10
+                    }
+                  },
+                  "root_key": "0x3ab64172",
+                  "ty": 32
+                }
+              },
+              "name": "reviewer_bonds"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x33a2fe2c",
+                      "ty": 23
+                    }
+                  },
+                  "root_key": "0x33a2fe2c",
+                  "ty": 35
+                }
+              },
+              "name": "reviewer_claimed"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x39129cba",
+                      "ty": 23
+                    }
+                  },
+                  "root_key": "0x39129cba",
+                  "ty": 38
+                }
+              },
+              "name": "reviewer_slashed"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x5ac5123b",
+                      "ty": 3
+                    }
+                  },
+                  "root_key": "0x5ac5123b",
+                  "ty": 41
+                }
+              },
+              "name": "reward_claim_count"
+            }
+          ],
+          "name": "ReviewEngine"
+        }
+      },
+      "root_key": "0x00000000",
+      "ty": 44
+    }
+  },
+  "types": [
+    {
+      "id": 0,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "AccountId"
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "type": {
+        "def": {
+          "array": {
+            "len": 32,
+            "type": 2
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": {
+        "def": {
+          "primitive": "u8"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": {
+        "def": {
+          "primitive": "u32"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": {
+        "def": {
+          "primitive": "str"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 3
+          },
+          {
+            "name": "V",
+            "type": 4
+          },
+          {
+            "name": "KeyType",
+            "type": 6
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 8
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "AutoKey"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": {
+        "def": {
+          "tuple": []
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": {
+        "def": {
+          "primitive": "u128"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 4
+          },
+          {
+            "name": "V",
+            "type": 12
+          },
+          {
+            "name": "KeyType",
+            "type": 13
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "id",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "submitter",
+                "type": 0,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "contract_hash",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "description",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "stake_amount",
+                "type": 10,
+                "typeName": "Balance"
+              },
+              {
+                "name": "reward_pool",
+                "type": 10,
+                "typeName": "Balance"
+              },
+              {
+                "name": "status",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "opened_at_block",
+                "type": 3,
+                "typeName": "u32"
+              },
+              {
+                "name": "closes_at_block",
+                "type": 3,
+                "typeName": "u32"
+              },
+              {
+                "name": "finding_count",
+                "type": 3,
+                "typeName": "u32"
+              }
+            ]
+          }
+        },
+        "path": [
+          "review_engine",
+          "review_engine",
+          "ReviewJob"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 14
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 4
+          },
+          {
+            "name": "V",
+            "type": 3
+          },
+          {
+            "name": "KeyType",
+            "type": 16
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 17
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 19
+          },
+          {
+            "name": "V",
+            "type": 20
+          },
+          {
+            "name": "KeyType",
+            "type": 21
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "type": {
+        "def": {
+          "tuple": [
+            4,
+            3
+          ]
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "id",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "job_id",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "reviewer",
+                "type": 0,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "severity",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "title",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "description",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "submitted_at_block",
+                "type": 3,
+                "typeName": "u32"
+              }
+            ]
+          }
+        },
+        "path": [
+          "review_engine",
+          "review_engine",
+          "Finding"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 22
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "type": {
+        "def": {
+          "primitive": "bool"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 4
+          },
+          {
+            "name": "V",
+            "type": 25
+          },
+          {
+            "name": "KeyType",
+            "type": 26
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "job_id",
+                "type": 4,
+                "typeName": "String"
+              },
+              {
+                "name": "total_findings",
+                "type": 3,
+                "typeName": "u32"
+              },
+              {
+                "name": "confirmed_findings",
+                "type": 3,
+                "typeName": "u32"
+              },
+              {
+                "name": "threshold",
+                "type": 3,
+                "typeName": "u32"
+              },
+              {
+                "name": "reached",
+                "type": 23,
+                "typeName": "bool"
+              },
+              {
+                "name": "voting_ends",
+                "type": 3,
+                "typeName": "u32"
+              }
+            ]
+          }
+        },
+        "path": [
+          "review_engine",
+          "review_engine",
+          "ConsensusState"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 27
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 29
+          },
+          {
+            "name": "V",
+            "type": 23
+          },
+          {
+            "name": "KeyType",
+            "type": 30
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "type": {
+        "def": {
+          "tuple": [
+            4,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "id": 30,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 31
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 29
+          },
+          {
+            "name": "V",
+            "type": 10
+          },
+          {
+            "name": "KeyType",
+            "type": 33
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 34
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 34,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 35,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 29
+          },
+          {
+            "name": "V",
+            "type": 23
+          },
+          {
+            "name": "KeyType",
+            "type": 36
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 37
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 37,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 29
+          },
+          {
+            "name": "V",
+            "type": 23
+          },
+          {
+            "name": "KeyType",
+            "type": 39
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 39,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 40
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 40,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 41,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "K",
+            "type": 4
+          },
+          {
+            "name": "V",
+            "type": 3
+          },
+          {
+            "name": "KeyType",
+            "type": 42
+          }
+        ],
+        "path": [
+          "ink_storage",
+          "lazy",
+          "mapping",
+          "Mapping"
+        ]
+      }
+    },
+    {
+      "id": 42,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "L",
+            "type": 7
+          },
+          {
+            "name": "R",
+            "type": 43
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ResolverKey"
+        ]
+      }
+    },
+    {
+      "id": 43,
+      "type": {
+        "def": {
+          "composite": {}
+        },
+        "params": [
+          {
+            "name": "ParentKey",
+            "type": 9
+          }
+        ],
+        "path": [
+          "ink_storage_traits",
+          "impls",
+          "ManualKey"
+        ]
+      }
+    },
+    {
+      "id": 44,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "admin",
+                "type": 0,
+                "typeName": "<AccountId as::ink::storage::traits::AutoStorableHint<::ink::\nstorage::traits::ManualKey<998921940u32, ()>,>>::Type"
+              },
+              {
+                "name": "escrow_address",
+                "type": 0,
+                "typeName": "<AccountId as::ink::storage::traits::AutoStorableHint<::ink::\nstorage::traits::ManualKey<258677655u32, ()>,>>::Type"
+              },
+              {
+                "name": "reputation_address",
+                "type": 0,
+                "typeName": "<AccountId as::ink::storage::traits::AutoStorableHint<::ink::\nstorage::traits::ManualKey<221622958u32, ()>,>>::Type"
+              },
+              {
+                "name": "job_count",
+                "type": 3,
+                "typeName": "<u32 as::ink::storage::traits::AutoStorableHint<::ink::storage\n::traits::ManualKey<3681220257u32, ()>,>>::Type"
+              },
+              {
+                "name": "job_ids",
+                "type": 5,
+                "typeName": "<Mapping<u32, String> as::ink::storage::traits::AutoStorableHint<\n::ink::storage::traits::ManualKey<3191192475u32, ()>,>>::Type"
+              },
+              {
+                "name": "jobs",
+                "type": 11,
+                "typeName": "<Mapping<String, ReviewJob> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<626190532u32, ()\n>,>>::Type"
+              },
+              {
+                "name": "finding_counts",
+                "type": 15,
+                "typeName": "<Mapping<String, u32> as::ink::storage::traits::AutoStorableHint<\n::ink::storage::traits::ManualKey<92694018u32, ()>,>>::Type"
+              },
+              {
+                "name": "findings",
+                "type": 18,
+                "typeName": "<Mapping<(String, u32), Finding> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<2045514797u32,\n()>,>>::Type"
+              },
+              {
+                "name": "consensus",
+                "type": 24,
+                "typeName": "<Mapping<String, ConsensusState> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<2184960032u32,\n()>,>>::Type"
+              },
+              {
+                "name": "has_submitted",
+                "type": 28,
+                "typeName": "<Mapping<(String, AccountId), bool> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<836889821u32, ()\n>,>>::Type"
+              },
+              {
+                "name": "reviewer_bonds",
+                "type": 32,
+                "typeName": "<Mapping<(String, AccountId), Balance> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<1916909114u32,\n()>,>>::Type"
+              },
+              {
+                "name": "reviewer_claimed",
+                "type": 35,
+                "typeName": "<Mapping<(String, AccountId), bool> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<754885171u32, ()\n>,>>::Type"
+              },
+              {
+                "name": "reviewer_slashed",
+                "type": 38,
+                "typeName": "<Mapping<(String, AccountId), bool> as::ink::storage::traits::\nAutoStorableHint<::ink::storage::traits::ManualKey<3130790457u32,\n()>,>>::Type"
+              },
+              {
+                "name": "reward_claim_count",
+                "type": 41,
+                "typeName": "<Mapping<String, u32> as::ink::storage::traits::AutoStorableHint<\n::ink::storage::traits::ManualKey<991085914u32, ()>,>>::Type"
+              }
+            ]
+          }
+        },
+        "path": [
+          "review_engine",
+          "review_engine",
+          "ReviewEngine"
+        ]
+      }
+    },
+    {
+      "id": 45,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 46,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 1,
+                "name": "CouldNotReadInput"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "LangError"
+        ]
+      }
+    },
+    {
+      "id": 47,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 48
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 48
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 48,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 4
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          },
+          {
+            "name": "E",
+            "type": 4
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 49,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 50
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 50
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 50,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 25
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 25
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 51,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 52
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 52
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 52,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 12
+          }
+        }
+      }
+    },
+    {
+      "id": 53,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 54
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 54
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 54,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 20
+          }
+        }
+      }
+    },
+    {
+      "id": 55,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 3
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 3
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 56,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 10
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 10
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 57,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 23
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 46
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 23
+          },
+          {
+            "name": "E",
+            "type": 46
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 1,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "Hash"
+        ]
+      }
+    },
+    {
+      "id": 59,
+      "type": {
+        "def": {
+          "primitive": "u64"
+        }
+      }
+    },
+    {
+      "id": 60,
+      "type": {
+        "def": {
+          "variant": {}
+        },
+        "path": [
+          "ink_env",
+          "types",
+          "NoChainExtension"
+        ]
+      }
+    }
+  ],
+  "version": 5
+}

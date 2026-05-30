@@ -1,0 +1,14 @@
+C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\deps\libserde-999fed740abff94b.rmeta: C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\build\serde-d142b454cd71ff88\out/private.rs
+
+C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\deps\libserde-999fed740abff94b.rlib: C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\build\serde-d142b454cd71ff88\out/private.rs
+
+C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\deps\serde-999fed740abff94b.d: C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\build\serde-d142b454cd71ff88\out/private.rs
+
+C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\sarth\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+C:\Users\sarth\OneDrive\Desktop\nextJs-PolaroidHack\contract-rust\target\debug\build\serde-d142b454cd71ff88\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\sarth\\OneDrive\\Desktop\\nextJs-PolaroidHack\\contract-rust\\target\\debug\\build\\serde-d142b454cd71ff88\\out

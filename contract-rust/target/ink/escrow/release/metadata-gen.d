@@ -1,0 +1,1 @@
+/mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/target/ink/escrow/release/metadata-gen: /mnt/c/Users/sarth/OneDrive/Desktop/nextJs-PolaroidHack/contract-rust/escrow/lib.rs /tmp/cargo-contract_I9XG7H/escrow/.ink/metadata_gen/main.rs

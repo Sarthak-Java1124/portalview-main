@@ -1,0 +1,13 @@
+[workspace]
+members = ["escrow", "reputation", "review_engine"]
+resolver = "2"
+exclude = ["target"]
+
+[workspace.dependencies]
+ink       = { version = "5.0.0", default-features = false }
+scale     = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"] }
+
+[profile.release]
+lto      = true
+opt-level = "z"

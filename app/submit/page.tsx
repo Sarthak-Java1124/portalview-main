@@ -297,7 +297,17 @@ export default function SubmitPage() {
 
               {/* GitHub URL / hash paste */}
               <div>
-                <label className="label-cap" style={{ display: "block", marginBottom: 6 }}>GitHub URL or contract hash</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                  <label className="label-cap">GitHub URL or contract hash</label>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ fontSize: ".68rem", padding: "0.15rem 0.45rem", color: "var(--ink-4)", border: "none" }}
+                    onClick={() => { setGithubUrl("https://github.com/Sarthak-Java1124/nft-minting-contract"); setHashInput(""); }}
+                  >
+                    Try example ↗
+                  </button>
+                </div>
                 <input
                   className="glass-input"
                   style={{ fontFamily: "var(--font-mono,monospace)", fontSize: ".82rem" }}
