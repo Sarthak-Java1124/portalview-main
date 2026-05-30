@@ -30,12 +30,22 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Always allow the landing page and auth page
-  if (pathname === "/" || pathname.startsWith("/auth")) {
+  // Always allow the landing page through
+  if (pathname === "/") {
     return response;
   }
 
-  // Redirect unauthenticated users to /auth, preserving the intended destination
+  // Auth page: let unauthenticated users through; bounce authenticated users
+  // straight to their destination so the WS-connection race can't strand them.
+  if (pathname.startsWith("/auth")) {
+    if (user) {
+      const next = request.nextUrl.searchParams.get("next") ?? "/dashboard";
+      return NextResponse.redirect(new URL(next, request.url));
+    }
+    return response;
+  }
+
+  // All other routes: redirect unauthenticated users to /auth
   if (!user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth";

@@ -31,8 +31,8 @@ function AuthForm() {
   const [error, setError]           = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading && user) router.replace("/dashboard");
-  }, [user, isLoading, router]);
+    if (!isLoading && user) router.replace(next);
+  }, [user, isLoading, router, next]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +41,10 @@ function AuthForm() {
     try {
       if (mode === "signin") {
         await signIn(email, password);
-        // navigation handled by the useEffect above once user state is set
+        // Full reload so the browser sends all fresh cookies in the next request,
+        // avoiding the race between ApiPromise.create() and the middleware session check.
+        window.location.href = next;
+        return;
       } else {
         if (!username.trim()) throw new Error("Username is required");
         if (username.trim().length < 3) throw new Error("Username must be at least 3 characters");
